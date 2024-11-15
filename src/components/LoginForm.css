@@ -1,0 +1,52 @@
+/* LoginForm.css */
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .login-form {
+    width: 350px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  /* Login.css */
+
+.error-message {
+  color: red;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* Add styling for the register link */
+.register-link {
+  margin-top: 1rem;
+  text-align: center;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.register-link:hover {
+  color: #0056b3;
+}

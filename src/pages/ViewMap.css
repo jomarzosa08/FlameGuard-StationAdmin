@@ -1,0 +1,28 @@
+/* src/pages/ViewMap.css */
+
+.view-map-page {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Prevent scrolling */
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.map-container {
+    flex-grow: 1; 
+    width: 100%;
+    height: calc(100vh - 80px); 
+    overflow: hidden; 
+}
+
+@media (max-width: 768px) {
+    .map-container {
+        height: calc(100vh - 60px); 
+    }
+}

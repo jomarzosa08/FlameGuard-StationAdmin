@@ -1,0 +1,16 @@
+/* ReportCard.css */
+
+.report-card {
+    background-color: #ffe0b2;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+  }
+  
+  .report-image img {
+    width: 50%;
+    height: auto;
+    border-radius: 10px;
+  }
+  

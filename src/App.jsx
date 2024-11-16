@@ -23,15 +23,13 @@ const App = () => {
     }, [location]);
 
     return (
-        <Router basename="/FlameGuard-StationAdmin">
-            <Routes>
-                <Route path="/" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profiles" element={<UserProfiles />} />
-                <Route path="/viewmap" element={<ViewMap />} />
-                <Route path="/register" element={<RegisterForm />} />
-            </Routes>
-        </Router>
+        <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profiles" element={<UserProfiles />} />
+            <Route path="/viewmap" element={<ViewMap />} />
+            <Route path="/register" element={<RegisterForm />} />
+        </Routes>
     );
 };
 

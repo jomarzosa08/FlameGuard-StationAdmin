@@ -1,27 +1,26 @@
-/* src/pages/Dashboard.css */
 .dashboard-container {
     display: flex;
     height: 100vh;
     color: #333;
-  }
-  
-  .main-content {
+}
+
+.main-content {
     margin-left: 250px;
     padding: 20px;
     width: calc(100% - 250px);
     overflow-y: auto;
     background-color: #f5f5f5;
     height: 100vh;
-  }
-  
-  .content {
+}
+
+.content {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-left: 50px;
-  }
-  
-  .card {
+}
+
+.card {
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -29,14 +28,14 @@
     width: 100%;
     max-width: 1200px;
     margin-bottom: 20px;
-  }
-  
-  .card h2 {
-    margin-top: 0;
-    font-size: 20px;
-  }
-  
-  .header {
+}
+
+    .card h2 {
+        margin-top: 0;
+        font-size: 20px;
+    }
+
+.header {
     background-color: #d32f2f; /* Fire engine red */
     padding: 20px;
     display: flex;
@@ -46,14 +45,14 @@
     color: #fff;
     margin-bottom: 20px;
     margin-left: 30px;
-  }
-  
-  .header h1 {
-    margin: 0;
-    font-size: 24px;
-  }
-  
-  .report-card {
+}
+
+    .header h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+.report-card {
     background-color: #ffe0b2; /* Light orange */
     padding: 15px;
     border-radius: 10px;
@@ -61,22 +60,22 @@
     margin-bottom: 20px;
     width: 100%;
     max-width: 100%;
-  }
-  
-  .report-details {
+}
+
+.report-details {
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
     font-size: 14px;
-  }
-  
-  .report-details p {
-    margin: 0;
-  }
-  
-  .report-image {
+}
+
+    .report-details p {
+        margin: 0;
+    }
+
+.report-image {
     margin-bottom: 15px;
-  }
+}
 
     .report-image img {
         width: 50%;
@@ -84,32 +83,27 @@
         border-radius: 10px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
-  
-  .report-image img {
-    width: 50%;
-    height: auto;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  .button-container {
+
+.button-container {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-  }
-  
-  .button-container button {
-    background-color: #d32f2f; /* Fire engine red */
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 16px;
-  }
-  
-  .button-container button:hover {
-    background-color: #b71c1c; /* Darker red for hover effect */
-  }
-  
+    margin-bottom: 20px; /* Add bottom margin */
+}
+
+    .button-container button,
+    .sort-button {
+        background-color: #d32f2f; /* Fire engine red */
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 16px;
+    }
+
+        .button-container button:hover,
+        .sort-button:hover {
+            background-color: #b71c1c; /* Darker red for hover effect */
+        }

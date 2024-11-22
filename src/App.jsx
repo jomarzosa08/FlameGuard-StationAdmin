@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import UserProfiles from './pages/UserProfiles';
 import ViewMap from './pages/ViewMap';
-import RegisterForm from './components/RegisterForm';
+import RegisterForm from './pages/RegisterForm';
 import Reports from './pages/Reports';
 
 const App = () => {
@@ -30,7 +30,7 @@ const App = () => {
             <Route path="/profiles" element={<UserProfiles />} />
             <Route path="/viewmap" element={<ViewMap />} />
             <Route path="/register" element={<RegisterForm />} />
-            <Route path="reports" element={<Reports/>} />
+            <Route path="/reports" element={<Reports/>} />
         </Routes>
     );
 };

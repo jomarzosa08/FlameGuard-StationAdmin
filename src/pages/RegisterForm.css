@@ -1,0 +1,132 @@
+/* RegisterForm.css */
+
+/* General Page Styling */
+body{
+    background: linear-gradient(135deg, #f06, #f90);
+}
+/* Full-page Container */
+.register-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    width: 90%;
+    max-width: 1200px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    height: 90vh;
+
+    /* Center the container */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Left Column: Form */
+.register-form {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #007bff #ddd;
+}
+
+/* For Chrome, Edge, and Safari */
+.register-form::-webkit-scrollbar {
+    width: 8px;
+}
+
+.register-form::-webkit-scrollbar-track {
+    background: #ddd;
+    border-radius: 10px;
+}
+
+.register-form::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 10px;
+}
+
+.register-form h1 {
+    margin-bottom: 20px;
+    color: #007bff;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Right Column: Map */
+.map-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.map-container .google-map {
+    height: 100%;
+    width: 100%;
+    border-radius: 10px;
+}
+
+/* Button Styling */
+button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 20px; /* Add space between the button and the last input */
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Error Message Styling */
+.error-message {
+    color: red;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .register-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .map-container {
+        height: 300px;
+    }
+
+    .register-form {
+        padding: 20px;
+    }
+}

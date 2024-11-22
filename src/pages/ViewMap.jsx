@@ -176,9 +176,8 @@ const ViewMap = () => {
             <Sidebar />
             <div className="main-content">
                 <Header />
+                <h2>Fire Stations and Incidents in Cebu City</h2>
                 <div className="map-container">
-                    <h2>Fire Stations and Incidents in Cebu City</h2>
-
                     <GoogleMap
                         mapContainerStyle={mapContainerStyle}
                         zoom={12}

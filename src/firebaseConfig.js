@@ -5,6 +5,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth"; // Import Firebase Authentication
 import { getFirestore } from "firebase/firestore"; // Import Firestore
 import { getAnalytics } from "firebase/analytics"; // Import Analytics (if needed)
+import { getStorage } from "firebase/storage"; // Import Firebase Storage
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -24,7 +25,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app); // Firebase Authentication
 const firestore = getFirestore(app); // Firestore database
 const analytics = getAnalytics(app); // Optional: Only use if you're using Google Analytics
+const storage = getStorage(app); // Firebase Storage
 
 // Export the initialized services for use in your app
-export { auth, firestore, analytics };
+export { auth, firestore, analytics, storage };
+
 

@@ -42,7 +42,8 @@ const LoginForm = () => {
     return (
         <div className="login-container">
             <form className="login-form" onSubmit={handleLogin}>
-                <h1>FlameGuard Station Admin Login</h1>
+            <img src="flameguard-logo.png" alt="logo" className="login-logo" />
+                <h1>FlameGuard Admin Login</h1>
                 <div className="form-group">
                     <label htmlFor="email">Email:</label>
                     <input

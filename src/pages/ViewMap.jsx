@@ -9,7 +9,7 @@ import "./ViewMap.css";
 
 const mapContainerStyle = {
     width: "100%",
-    height: "calc(100vh - 50px)",
+    height: "100%", // Use full height defined in CSS
 };
 
 const center = {
@@ -27,12 +27,12 @@ const ViewMap = () => {
     });
 
     const mapRef = useRef();
-    const [fireStations, setFireStations] = useState([]);
-    const [fireIncidents, setFireIncidents] = useState([]);
-    const [selectedFireIncident, setSelectedFireIncident] = useState(null);
-    const [selectedFireStation, setSelectedFireStation] = useState(null);
+    const [responders, setResponders] = useState([]);
+    const [fireReports, setFireReports] = useState([]);
+    const [selectedFireReport, setSelectedFireReport] = useState(null);
+    const [selectedResponder, setSelectedResponder] = useState(null);
     const [weatherData, setWeatherData] = useState({});
-    const [incidentWeatherData, setIncidentWeatherData] = useState({});
+    const [reportWeatherData, setReportWeatherData] = useState({});
     const [directions, setDirections] = useState({});
 
     const isValidLatLng = (lat, lng) =>
@@ -51,122 +51,137 @@ const ViewMap = () => {
     };
 
     useEffect(() => {
-        const fetchFireStations = async () => {
-            const fireStationsSnapshot = await getDocs(collection(firestore, "fireStations"));
-            const stationsData = fireStationsSnapshot.docs
-                .map(doc => ({
-                    id: doc.id,
-                    name: doc.data().fireStation_name,
-                    position: {
-                        lat: parseFloat(doc.data().fireStation_latitude),
-                        lng: parseFloat(doc.data().fireStation_longitude),
-                    },
-                }))
-                .filter(station => isValidLatLng(station.position.lat, station.position.lng));
-            
-            setFireStations(stationsData);
-
-            stationsData.forEach(async station => {
-                const weather = await fetchWeather(station.position.lat, station.position.lng);
-                setWeatherData(prevData => ({
-                    ...prevData,
-                    [station.id]: weather,
-                }));
-            });
+        const handleResize = () => {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
         };
 
-        fetchFireStations();
+        handleResize(); // Set on mount
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     useEffect(() => {
-        const fetchFireIncidents = async () => {
-            const fireIncidentsSnapshot = await getDocs(collection(firestore, "fireIncidents"));
-            const incidentsData = fireIncidentsSnapshot.docs
-                .map(doc => ({
-                    id: doc.id,
-                    location: {
-                        lat: parseFloat(doc.data().fireIncident_lat),
-                        lng: parseFloat(doc.data().fireIncident_lng),
-                    },
-                    locationName: doc.data().fireIncident_location_name,
-                    description: doc.data().fireIncident_description,
-                    status: doc.data().fireIncident_status,
-                    responders: doc.data().fireIncident_responders || [],
-                }))
-                .filter(incident => isValidLatLng(incident.location.lat, incident.location.lng));
-            
-            setFireIncidents(incidentsData);
+        const fetchResponders = async () => {
+            try {
+                const respondersSnapshot = await getDocs(collection(firestore, "responders"));
+                const respondersData = respondersSnapshot.docs
+                    .map(doc => ({
+                        id: doc.id,
+                        name: doc.data().respondents_Name,
+                        position: {
+                            lat: parseFloat(doc.data().respondents_latitude),
+                            lng: parseFloat(doc.data().respondents_longitude),
+                        },
+                    }))
+                    .filter(responder => isValidLatLng(responder.position.lat, responder.position.lng));
 
-            incidentsData.forEach(async incident => {
-                const weather = await fetchWeather(incident.location.lat, incident.location.lng);
-                setIncidentWeatherData(prevData => ({
-                    ...prevData,
-                    [incident.id]: weather,
-                }));
-            });
+                setResponders(respondersData);
+
+                respondersData.forEach(async responder => {
+                    const weather = await fetchWeather(responder.position.lat, responder.position.lng);
+                    setWeatherData(prevData => ({
+                        ...prevData,
+                        [responder.id]: weather,
+                    }));
+                });
+            } catch (error) {
+                console.error("Error fetching responders data:", error);
+            }
         };
 
-        fetchFireIncidents();
+        fetchResponders();
+    }, []);
+
+    useEffect(() => {
+        const fetchFireReports = async () => {
+            try {
+                const reportsSnapshot = await getDocs(collection(firestore, "reportDetails"));
+                const reportsData = reportsSnapshot.docs
+                    .map(doc => ({
+                        id: doc.id,
+                        reportedBy: doc.data().reportedBy,
+                        timeOfReport: doc.data().timeOfReport,
+                        location: {
+                            lat: parseFloat(doc.data().latitude),
+                            lng: parseFloat(doc.data().longitude),
+                        },
+                    }))
+                    .filter(report => isValidLatLng(report.location.lat, report.location.lng));
+
+                setFireReports(reportsData);
+
+                reportsData.forEach(async report => {
+                    const weather = await fetchWeather(report.location.lat, report.location.lng);
+                    setReportWeatherData(prevData => ({
+                        ...prevData,
+                        [report.id]: weather,
+                    }));
+                });
+            } catch (error) {
+                console.error("Error fetching fire reports:", error);
+            }
+        };
+
+        fetchFireReports();
     }, []);
 
     const onMapLoad = useCallback(map => {
         mapRef.current = map;
     }, []);
 
-    const calculateDirections = async fireIncident => {
+    const calculateDirections = async fireReport => {
         const directionsService = new window.google.maps.DirectionsService();
-        const fireLocation = { lat: fireIncident.location.lat, lng: fireIncident.location.lng };
-    
-        const trafficBasedStations = await Promise.all(
-            fireStations.map(async station => {
-                const stationLocation = { lat: station.position.lat, lng: station.position.lng };
-    
+        const fireLocation = { lat: fireReport.location.lat, lng: fireReport.location.lng };
+
+        const trafficBasedResponders = await Promise.all(
+            responders.map(async responder => {
+                const responderLocation = { lat: responder.position.lat, lng: responder.position.lng };
+
                 return new Promise(resolve => {
                     directionsService.route(
                         {
-                            origin: stationLocation,
+                            origin: responderLocation,
                             destination: fireLocation,
                             travelMode: window.google.maps.TravelMode.DRIVING,
                             drivingOptions: {
-                                departureTime: new Date(), // Current time for real-time traffic
+                                departureTime: new Date(),
                             },
                         },
                         (result, status) => {
                             if (status === "OK" && result.routes.length > 0) {
-                                const leg = result.routes[0].legs[0]; // First route, first leg
+                                const leg = result.routes[0].legs[0];
                                 resolve({
-                                    stationId: station.id,
-                                    stationName: station.name,
+                                    responderId: responder.id,
+                                    responderName: responder.name,
                                     distance: leg.distance.text,
                                     duration: leg.duration_in_traffic
                                         ? leg.duration_in_traffic.text
                                         : leg.duration.text,
                                 });
                             } else {
-                                resolve(null); // Handle failed routes gracefully
+                                resolve(null);
                             }
                         }
                     );
                 });
             })
         );
-    
-        const validStations = trafficBasedStations.filter(Boolean).sort((a, b) => {
+
+        const validResponders = trafficBasedResponders.filter(Boolean).sort((a, b) => {
             const durationA = parseInt(a.duration.split(" ")[0], 10);
             const durationB = parseInt(b.duration.split(" ")[0], 10);
-            return durationA - durationB; // Sort by ETA
+            return durationA - durationB;
         });
-    
+
         setDirections({
-            fireIncidentId: fireIncident.id,
-            nearestStations: validStations.slice(0, 3), // Take the 3 closest stations
+            fireReportId: fireReport.id,
+            nearestResponders: validResponders.slice(0, 3),
         });
-    
-        setSelectedFireIncident(fireIncident);
-        setSelectedFireStation(null);
+
+        setSelectedFireReport(fireReport);
+        setSelectedResponder(null);
     };
-    
-    
 
     if (loadError) return <div>Error loading maps</div>;
     if (!isLoaded) return <div>Loading Maps...</div>;
@@ -176,7 +191,7 @@ const ViewMap = () => {
             <Sidebar />
             <div className="main-content">
                 <Header />
-                <h2>Fire Stations and Incidents in Cebu City</h2>
+                <h2>Responders and Reports in Cebu City</h2>
                 <div className="map-container">
                     <GoogleMap
                         mapContainerStyle={mapContainerStyle}
@@ -184,99 +199,34 @@ const ViewMap = () => {
                         center={center}
                         onLoad={onMapLoad}
                     >
-                        {fireStations.map(station => (
+                        {responders.map(responder => (
                             <Marker
-                                key={station.id}
-                                position={station.position}
-                                title={station.name}
+                                key={responder.id}
+                                position={responder.position}
+                                title={responder.name}
                                 icon={{
                                     url: customMarkerUrl,
                                     scaledSize: new window.google.maps.Size(50, 50),
                                 }}
                                 onClick={() => {
-                                    setSelectedFireStation(station);
-                                    setSelectedFireIncident(null);
+                                    setSelectedResponder(responder);
+                                    setSelectedFireReport(null);
                                 }}
                             />
                         ))}
 
-                        {fireIncidents.map(fire => (
+                        {fireReports.map(report => (
                             <Marker
-                                key={fire.id}
-                                position={fire.location}
-                                title={`Fire Incident: ${fire.description}`}
+                                key={report.id}
+                                position={report.location}
+                                title={`Reported By: ${report.reportedBy}`}
                                 icon={{
                                     url: fireIncidentMarkerUrl,
                                     scaledSize: new window.google.maps.Size(40, 40),
                                 }}
-                                onClick={() => calculateDirections(fire)}
+                                onClick={() => calculateDirections(report)}
                             />
                         ))}
-
-                        {selectedFireIncident && directions.fireIncidentId === selectedFireIncident.id && (
-                            <InfoWindow
-                                position={selectedFireIncident.location}
-                                onCloseClick={() => setSelectedFireIncident(null)}
-                            >
-                                <div>
-                                    <h4>{selectedFireIncident.locationName}</h4>
-                                    <p>{selectedFireIncident.description}</p>
-                                    <p>Status: {selectedFireIncident.status}</p>
-                                    <p><strong>Lat:</strong> {selectedFireIncident.location.lat}, <strong>Lng:</strong> {selectedFireIncident.location.lng}</p>
-                                    {incidentWeatherData[selectedFireIncident.id] ? (
-                                        <>
-                                            <p><strong>Weather:</strong> {incidentWeatherData[selectedFireIncident.id].main.temp} °C</p>
-                                            <p><strong>Condition:</strong> {incidentWeatherData[selectedFireIncident.id].weather[0].description}</p>
-                                            <p><strong>Humidity:</strong> {incidentWeatherData[selectedFireIncident.id].main.humidity}%</p>
-                                        </>
-                                    ) : (
-                                        <p>Loading weather data...</p>
-                                    )}
-                                    <h5>Nearest Fire Stations:</h5>
-                                    {directions.nearestStations.length > 0 ? (
-                                        directions.nearestStations.map(station => (
-                                            <p key={station.stationId}>
-                                                {station.stationName} - {station.distance} away
-                                                <br />
-                                                ETA (with traffic): {station.duration}
-                                            </p>
-                                        ))
-                                    ) : (
-                                        <p>No nearby fire stations found.</p>
-                                    )}
-
-                                    <h5>Responding Fire Stations:</h5>
-                                    {selectedFireIncident.responders.length > 0 ? (
-                                        selectedFireIncident.responders.map(responder => (
-                                            <p key={responder}>{fireStations.find(s => s.id === responder)?.name || responder}</p>
-                                        ))
-                                    ) : (
-                                        <p>No responders assigned yet.</p>
-                                    )}
-                                </div>
-                            </InfoWindow>
-                        )}
-
-
-                        {selectedFireStation && (
-                            <InfoWindow
-                                position={selectedFireStation.position}
-                                onCloseClick={() => setSelectedFireStation(null)}
-                            >
-                                <div>
-                                    <h4>{selectedFireStation.name}</h4>
-                                    <p><strong>Lat:</strong>{selectedFireStation.position.lat}, <strong>Lng:</strong> {selectedFireStation.position.lng}</p>
-                                    {weatherData[selectedFireStation.id] ? (
-                                        <>
-                                            <p><strong>Weather:</strong> {weatherData[selectedFireStation.id].main.temp} °C</p>
-                                            <p><strong>Humidity:</strong> {weatherData[selectedFireStation.id].main.humidity}%</p>
-                                        </>
-                                    ) : (
-                                        <p>Loading weather data...</p>
-                                    )}
-                                </div>
-                            </InfoWindow>
-                        )}
                     </GoogleMap>
                 </div>
             </div>

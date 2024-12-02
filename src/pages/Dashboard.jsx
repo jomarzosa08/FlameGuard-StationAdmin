@@ -206,7 +206,12 @@ const Dashboard = () => {
                                         />
                                     </div>
                                     <div className="button-container">
-                                        <button className="acknowledge-button">Acknowledge</button>
+                                    <button
+                                        className="acknowledge-button"
+                                        onClick={() => navigate('/response', { state: { report } })}
+                                    >
+                                        Acknowledge
+                                    </button>
                                         <button onClick={() => handleViewDetails(report)}>
                                             View Details
                                         </button>

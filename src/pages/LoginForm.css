@@ -50,3 +50,11 @@
 .register-link:hover {
   color: #0056b3;
 }
+
+.login-container img {
+  display: block;
+  margin: 0 auto 20px; /* Centers the image and adds space below */
+  width: 150px; /* Adjust the width as desired */
+  height: auto; /* Maintains aspect ratio */
+  max-width: 100%; /* Ensures responsiveness */
+}

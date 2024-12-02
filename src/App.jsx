@@ -7,6 +7,7 @@ import UserProfiles from './pages/UserProfiles';
 import ViewMap from './pages/ViewMap';
 import RegisterForm from './pages/RegisterForm';
 import Reports from './pages/Reports';
+import Response from './pages/Response';
 
 const App = () => {
     const location = useLocation();
@@ -19,6 +20,7 @@ const App = () => {
             "/viewmap": "View Map - FlameGuard",
             "/register": "Register - FlameGuard",
             "/reports": "Reports - FlameGuard",
+            "/response": "Response - FlameGuard",
         };
         document.title = routeTitleMap[location.pathname] || "FlameGuard";
     }, [location]);
@@ -31,6 +33,7 @@ const App = () => {
             <Route path="/viewmap" element={<ViewMap />} />
             <Route path="/register" element={<RegisterForm />} />
             <Route path="/reports" element={<Reports/>} />
+            <Route path="/response" element={<Response />} />
         </Routes>
     );
 };

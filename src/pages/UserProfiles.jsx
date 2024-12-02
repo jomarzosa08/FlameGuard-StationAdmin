@@ -1,9 +1,8 @@
-// src/pages/UserProfiles.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { firestore } from '../firebaseConfig';
+import { deleteUser } from 'firebase/auth';
+import { auth, firestore } from '../firebaseConfig';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import './UserProfiles.css';
@@ -49,8 +48,13 @@ const UserProfiles = () => {
         );
         if (confirmDelete) {
             try {
+                // Delete from Firestore
                 await deleteDoc(doc(firestore, 'responders', id));
                 setResponders(responders.filter((responder) => responder.id !== id));
+
+                // Delete from Firebase Authentication
+                const user = await auth.getUser(id); // Fetch the user
+                await deleteUser(user); // Delete the user
                 alert('Responder profile deleted successfully!');
             } catch (error) {
                 console.error('Error deleting responder:', error);
@@ -103,7 +107,7 @@ const UserProfiles = () => {
             <div className="main-content">
                 <Header />
                 <div className="user-profiles-container">
-                    <div className="user-profiles-header">
+                <div className="user-profiles-header">
                         <h2>Responder Profiles</h2>
                         <button
                             className="add-responder-button"
@@ -112,6 +116,7 @@ const UserProfiles = () => {
                             Add Responder
                         </button>
                     </div>
+                    <br />
                     <table className="user-profiles-table">
                         <thead>
                             <tr>

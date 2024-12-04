@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { arrayUnion, collection, getDocs, doc, updateDoc } from 'firebase/firestore'; // Move this import to the top
 import { firestore } from '../firebaseConfig';
 import { GoogleMap, DirectionsRenderer, useJsApiLoader } from '@react-google-maps/api';
 import Sidebar from '../components/Sidebar';
@@ -30,7 +30,7 @@ const Response = () => {
     const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
 
     const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY', // Replace with your API key
+        googleMapsApiKey: "AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQKEY",
         libraries: ['places'],
     });
 
@@ -39,10 +39,12 @@ const Response = () => {
             try {
                 const respondersCollection = collection(firestore, 'responders');
                 const snapshot = await getDocs(respondersCollection);
-                const respondersData = snapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
+                const respondersData = snapshot.docs
+                    .map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }))
+                    .filter((responder) => responder.dutyStatus !== "on duty"); // Exclude on-duty responders
 
                 if (report?.latitude && report?.longitude) {
                     const updatedResponders = respondersData.map((responder) => ({
@@ -95,22 +97,23 @@ const Response = () => {
 
     const notifyResponder = async (responder) => {
         try {
-            const notification = {
-                title: 'Fire Alert Nearby',
-                message: `There is a fire reported near ${report.latitude}, ${report.longitude}. Please respond.`,
-                timestamp: new Date().toISOString(),
-                reportId: report.id,
-            };
+            const reportRef = doc(firestore, 'reportDetails', report.id);
 
+            // Add responder's ID to the assignedResponder field
+            await updateDoc(reportRef, {
+                assignedResponder: arrayUnion(responder.id),
+            });
+
+            // Update the responder's duty status
             const responderRef = doc(firestore, 'responders', responder.id);
-
             await updateDoc(responderRef, {
-                notifications: [...(responder.notifications || []), notification],
+                dutyStatus: "on duty",
             });
 
             alert(`Notification sent to ${responder.respondents_Name}`);
         } catch (error) {
             console.error('Error notifying responder:', error);
+            alert('Failed to notify responder. Please try again.');
         }
     };
 

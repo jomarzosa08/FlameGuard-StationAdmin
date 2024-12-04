@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { firestore } from '../firebaseConfig'; // Import your Firestore config
-import * as tf from '@tensorflow/tfjs'; // Import TensorFlow.js
+import { firestore } from '../firebaseConfig';
+import * as tf from '@tensorflow/tfjs';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -43,21 +43,19 @@ const Dashboard = () => {
                 const reportsData = snapshot.docs.map((doc) => ({
                     id: doc.id,
                     ...doc.data(),
-                    timeOfReport: doc.data().timeOfReport?.toDate(), // Convert Firestore timestamp to JS Date
+                    timeOfReport: doc.data().timeOfReport?.toDate(),
                 }));
 
-                // Sort reports by timeOfReport in ascending order (oldest first) for numbering
                 const sortedByTime = reportsData.sort(
                     (a, b) => (a.timeOfReport || new Date(0)) - (b.timeOfReport || new Date(0))
                 );
 
-                // Assign chronological numbers (oldest report is 1)
                 const numberedReports = sortedByTime.map((report, index) => ({
                     ...report,
-                    number: index + 1, // Assign number based on chronological order
+                    number: index + 1,
                 }));
 
-                setReports(numberedReports); // Save reports with assigned numbers
+                setReports(numberedReports);
             } catch (error) {
                 console.error('Error fetching reports:', error);
             }
@@ -79,10 +77,27 @@ const Dashboard = () => {
         predictForAllReports();
     }, [model, reports]);
 
-    // Function to predict fire spread and update Firestore
+    // Function to determine fire level and append response to description
+    const getFireLevelInfo = (fireSpreadRate) => {
+        if (fireSpreadRate >= 0 && fireSpreadRate < 14) {
+            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+        } else if (fireSpreadRate >= 14 && fireSpreadRate <= 16) {
+            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+        } else if (fireSpreadRate > 16 && fireSpreadRate <= 21) {
+            return { level: "Level 2", response: "2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+        } else if (fireSpreadRate > 21 && fireSpreadRate <= 30) {
+            return { level: "Level 2", response: "2-4 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
+        } else if (fireSpreadRate > 30) {
+            return { level: "Level 3", response: "4-5 fire trucks from nearby fire stations in Cebu City, potential level 3 in 15 mins" };
+        } else {
+            return { level: "No Fire Level", response: "Normal conditions, no specific response required" };
+        }
+    };
+
+
+    // Predict fire spread and update Firestore
     const predictFireSpread = async (report) => {
         try {
-            // Normalize and encode input features
             const normalizedTemperature = normalize(report.temperature, 26, 36);
             const normalizedHumidity = normalize(report.humidity, 40, 80);
             const normalizedWindSpeed = normalize(report.windSpeed, 1.5, 8);
@@ -90,17 +105,14 @@ const Dashboard = () => {
             const normalizedBuildingHeight = normalize(report.floors || 1, 1, 10);
             const normalizedDistanceToStation = normalize(report.distanceToStation || 0.5, 0.5, 3);
 
-            // One-hot encode housing material
             const housingMaterialWood = report.materialType === 'Wood' ? 1 : 0;
             const housingMaterialBrick = report.materialType === 'Brick' ? 1 : 0;
             const housingMaterialConcrete = report.materialType === 'Concrete' ? 1 : 0;
 
-            // One-hot encode zoning
             const zoningResidential = report.propertyType === 'Residential' ? 1 : 0;
             const zoningMixedUse = report.propertyType === 'Mixed-use' ? 1 : 0;
             const zoningCommercial = report.propertyType === 'Commercial' ? 1 : 0;
 
-            // Prepare input array (12 features)
             const inputData = [
                 normalizedTemperature,
                 normalizedHumidity,
@@ -116,48 +128,48 @@ const Dashboard = () => {
                 zoningCommercial,
             ];
 
-            // Convert input array to Tensor
             const inputTensor = tf.tensor([inputData]);
-
-            // Run prediction
             const predictionTensor = model.predict(inputTensor);
-
-            // Get prediction value and round to 2 decimal places
             const prediction = parseFloat(predictionTensor.dataSync()[0].toFixed(2));
+            const { level, response } = getFireLevelInfo(prediction);
 
-            // Update Firestore with prediction
+            // Clear and update the description field
             await updateDoc(doc(firestore, 'reportDetails', report.id), {
-                fireSpread: prediction,
+                description: '', // Clear the existing description
             });
 
-            console.log(`Predicted fire spread for report ${report.id}: ${prediction}`);
+            // Update the report with the new values
+            await updateDoc(doc(firestore, 'reportDetails', report.id), {
+                fireSpread: prediction,
+                fireLevel: level,
+                description: response, // Set the description to the recommended response
+            });
+
+            console.log(`Updated report ${report.id}:`, { prediction, level, response });
         } catch (error) {
             console.error(`Error predicting fire spread for report ${report.id}:`, error);
         }
     };
 
 
-    // Handle sorting order toggle
+
     const toggleSortOrder = () => {
-        setIsDescending((prev) => !prev); // Toggle sort order
+        setIsDescending((prev) => !prev);
     };
 
-    // Handle viewing report details
     const handleViewDetails = (report) => {
-        setLastOpenedReport(report); // Update the last opened report
+        setLastOpenedReport(report);
         navigate('/reports', { state: { report } });
     };
 
-    // Handle navigating to report from the sidebar
     const handleViewReportFromSidebar = () => {
         if (lastOpenedReport) {
             navigate('/reports', { state: { report: lastOpenedReport } });
         } else if (sortedReports.length > 0) {
-            navigate('/reports', { state: { report: sortedReports[0] } }); // Default to most recent
+            navigate('/reports', { state: { report: sortedReports[0] } });
         }
     };
 
-    // Sort reports based on current sort order (ascending or descending)
     useEffect(() => {
         const sorted = [...reports].sort((a, b) => {
             const timeA = a.timeOfReport || new Date(0);
@@ -194,6 +206,7 @@ const Dashboard = () => {
                                                 ? report.timeOfReport.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
                                                 : 'Unknown Time'}
                                         </p>
+                                        <p><strong>Fire Level:</strong> {report.fireLevel || 'Not predicted'}</p>
                                     </div>
                                     <div className="report-description">
                                         <p><strong>Description:</strong> {report.description || 'No description available'}</p>
@@ -206,12 +219,12 @@ const Dashboard = () => {
                                         />
                                     </div>
                                     <div className="button-container">
-                                    <button
-                                        className="acknowledge-button"
-                                        onClick={() => navigate('/response', { state: { report } })}
-                                    >
-                                        Acknowledge
-                                    </button>
+                                        <button
+                                            className="acknowledge-button"
+                                            onClick={() => navigate('/response', { state: { report } })}
+                                        >
+                                            Acknowledge
+                                        </button>
                                         <button onClick={() => handleViewDetails(report)}>
                                             View Details
                                         </button>

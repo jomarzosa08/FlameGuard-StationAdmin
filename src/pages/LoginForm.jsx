@@ -19,17 +19,26 @@ const LoginForm = () => {
         setLoading(true);
 
         try {
-            // Query Firestore to check if this email belongs to a station admin
-            const adminsRef = collection(firestore, 'stationAdmin');
-            const q = query(adminsRef, where('stationAdmin_Email', '==', email));
-            const querySnapshot = await getDocs(q);
+            // Check if email belongs to Station Admin
+            const stationAdminsRef = collection(firestore, 'stationAdmin');
+            const stationAdminQuery = query(stationAdminsRef, where('stationAdmin_Email', '==', email));
+            const stationAdminSnapshot = await getDocs(stationAdminQuery);
 
-            if (!querySnapshot.empty) {
-                // Email matches admin; proceed with sign-in
+            // Check if email belongs to System Admin
+            const systemAdminsRef = collection(firestore, 'systemAdmin');
+            const systemAdminQuery = query(systemAdminsRef, where('systemAdmin_Email', '==', email));
+            const systemAdminSnapshot = await getDocs(systemAdminQuery);
+
+            if (!stationAdminSnapshot.empty) {
+                // Email matches Station Admin
                 await signInWithEmailAndPassword(auth, email, password);
-                navigate('/dashboard'); // Redirect to dashboard
+                navigate('/dashboard'); // Redirect to Station Admin Dashboard
+            } else if (!systemAdminSnapshot.empty) {
+                // Email matches System Admin
+                await signInWithEmailAndPassword(auth, email, password);
+                navigate('/SystemAdminDashboard'); // Redirect to System Admin Dashboard
             } else {
-                setError('Unauthorized access. Only station admins are allowed.');
+                setError('Unauthorized access. Only authorized admins are allowed.');
             }
         } catch (error) {
             setError('Invalid email or password. Please try again.');
@@ -41,7 +50,7 @@ const LoginForm = () => {
     return (
         <div className="login-container">
             <form className="login-form" onSubmit={handleLogin}>
-            <img src="flameguard-logo.png" alt="logo" className="login-logo" />
+                <img src="flameguard-logo.png" alt="logo" className="login-logo" />
                 <h1>FlameGuard Admin Login</h1>
                 <div className="form-group">
                     <label htmlFor="email">Email:</label>
@@ -67,9 +76,6 @@ const LoginForm = () => {
                 <button type="submit" disabled={loading}>
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
-                <p className="register-link" onClick={() => navigate('/register')}>
-                    Register
-                </p>
             </form>
         </div>
     );

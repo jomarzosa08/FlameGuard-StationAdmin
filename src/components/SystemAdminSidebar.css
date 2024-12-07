@@ -1,0 +1,45 @@
+/* Sidebar.css */
+
+.sidebar {
+    width: 250px;
+    background: linear-gradient(135deg, #f06, #f90);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+    transition: width 0.3s ease;
+}
+
+.sidebar img {
+    display: block;
+    margin: 0 auto 10px; 
+    width: 120px;
+    height: auto; 
+    max-width: 100%;
+}
+
+.sidebar h2 {
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+
+.sidebar a {
+    padding: 1rem 0;
+    border-bottom: 1px solid #444;
+    transition: background-color 0.3s;
+}
+
+.sidebar a:hover {
+    background-color: #444;
+}
+
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+}

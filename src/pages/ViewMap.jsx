@@ -9,7 +9,7 @@ import "./ViewMap.css";
 
 const mapContainerStyle = {
     width: "100%",
-    height: "100%", // Use full height defined in CSS
+    height: "100%",
 };
 
 const center = {
@@ -20,6 +20,28 @@ const center = {
 const WEATHER_API_KEY = "9f4e6a5088793054a90a3568ac331498";
 const fireIncidentMarkerUrl = "fire.png";
 const customMarkerUrl = "fire-station.png";
+
+const formatFirestoreTimestamp = (timestamp) => {
+    if (!timestamp) return "N/A";
+    const date = new Date(timestamp.seconds * 1000);
+    return date.toLocaleString();
+};
+
+const isValidLatLng = (lat, lng) => 
+    typeof lat === "number" && typeof lng === "number" && !isNaN(lat) && !isNaN(lng) &&
+    lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+
+const fetchWeather = async (lat, lon) => {
+    try {
+        const response = await axios.get(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching weather data:", error);
+        return null;
+    }
+};
 
 const ViewMap = () => {
     const { isLoaded, loadError } = useLoadScript({
@@ -35,72 +57,47 @@ const ViewMap = () => {
     const [reportWeatherData, setReportWeatherData] = useState({});
     const [directions, setDirections] = useState({});
 
-    const isValidLatLng = (lat, lng) =>
-        typeof lat === "number" && typeof lng === "number" && !isNaN(lat) && !isNaN(lng);
-
-    const fetchWeather = async (lat, lon) => {
-        try {
-            const response = await axios.get(
-                `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
-            );
-            return response.data;
-        } catch (error) {
-            console.error("Error fetching weather data:", error);
-            return null;
-        }
-    };
-
-    useEffect(() => {
-        const handleResize = () => {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
-
-        handleResize(); // Set on mount
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
+    // Fetch responders from Firestore
     useEffect(() => {
         const fetchResponders = async () => {
             try {
-                const respondersSnapshot = await getDocs(collection(firestore, "responders"));
-                const respondersData = respondersSnapshot.docs
+                const snapshot = await getDocs(collection(firestore, "responders"));
+                const data = snapshot.docs
                     .map(doc => ({
                         id: doc.id,
-                        name: doc.data().respondents_Name,
+                        name: doc.data().respondents_Name || "Unknown",
                         position: {
                             lat: parseFloat(doc.data().respondents_latitude),
                             lng: parseFloat(doc.data().respondents_longitude),
                         },
                     }))
                     .filter(responder => isValidLatLng(responder.position.lat, responder.position.lng));
+                
+                setResponders(data);
 
-                setResponders(respondersData);
-
-                respondersData.forEach(async responder => {
-                    const weather = await fetchWeather(responder.position.lat, responder.position.lng);
-                    setWeatherData(prevData => ({
-                        ...prevData,
-                        [responder.id]: weather,
-                    }));
+                data.forEach(async responder => {
+                    if (!weatherData[responder.id]) {
+                        const weather = await fetchWeather(responder.position.lat, responder.position.lng);
+                        setWeatherData(prev => ({ ...prev, [responder.id]: weather }));
+                    }
                 });
             } catch (error) {
-                console.error("Error fetching responders data:", error);
+                console.error("Error fetching responders:", error);
             }
         };
 
         fetchResponders();
-    }, []);
+    }, [weatherData]);
 
+    // Fetch fire reports from Firestore
     useEffect(() => {
         const fetchFireReports = async () => {
             try {
-                const reportsSnapshot = await getDocs(collection(firestore, "reportDetails"));
-                const reportsData = reportsSnapshot.docs
+                const snapshot = await getDocs(collection(firestore, "reportDetails"));
+                const data = snapshot.docs
                     .map(doc => ({
                         id: doc.id,
-                        reportedBy: doc.data().reportedBy,
+                        reportedBy: doc.data().reportedBy || "Unknown",
                         timeOfReport: doc.data().timeOfReport,
                         location: {
                             lat: parseFloat(doc.data().latitude),
@@ -109,14 +106,13 @@ const ViewMap = () => {
                     }))
                     .filter(report => isValidLatLng(report.location.lat, report.location.lng));
 
-                setFireReports(reportsData);
+                setFireReports(data);
 
-                reportsData.forEach(async report => {
-                    const weather = await fetchWeather(report.location.lat, report.location.lng);
-                    setReportWeatherData(prevData => ({
-                        ...prevData,
-                        [report.id]: weather,
-                    }));
+                data.forEach(async report => {
+                    if (!reportWeatherData[report.id]) {
+                        const weather = await fetchWeather(report.location.lat, report.location.lng);
+                        setReportWeatherData(prev => ({ ...prev, [report.id]: weather }));
+                    }
                 });
             } catch (error) {
                 console.error("Error fetching fire reports:", error);
@@ -124,7 +120,7 @@ const ViewMap = () => {
         };
 
         fetchFireReports();
-    }, []);
+    }, [reportWeatherData]);
 
     const onMapLoad = useCallback(map => {
         mapRef.current = map;
@@ -132,11 +128,11 @@ const ViewMap = () => {
 
     const calculateDirections = async fireReport => {
         const directionsService = new window.google.maps.DirectionsService();
-        const fireLocation = { lat: fireReport.location.lat, lng: fireReport.location.lng };
+        const fireLocation = fireReport.location;
 
         const trafficBasedResponders = await Promise.all(
             responders.map(async responder => {
-                const responderLocation = { lat: responder.position.lat, lng: responder.position.lng };
+                const responderLocation = responder.position;
 
                 return new Promise(resolve => {
                     directionsService.route(
@@ -227,6 +223,41 @@ const ViewMap = () => {
                                 onClick={() => calculateDirections(report)}
                             />
                         ))}
+
+                        {selectedResponder && (
+                            <InfoWindow
+                                position={selectedResponder.position}
+                                onCloseClick={() => setSelectedResponder(null)}
+                            >
+                                <div>
+                                    <h4>{selectedResponder.name}</h4>
+                                    {weatherData[selectedResponder.id] && (
+                                        <p>
+                                            Weather: {weatherData[selectedResponder.id].weather[0].description}<br />
+                                            Temperature: {weatherData[selectedResponder.id].main.temp}°C
+                                        </p>
+                                    )}
+                                </div>
+                            </InfoWindow>
+                        )}
+
+                        {selectedFireReport && (
+                            <InfoWindow
+                                position={selectedFireReport.location}
+                                onCloseClick={() => setSelectedFireReport(null)}
+                            >
+                                <div>
+                                    <h4>Reported By: {selectedFireReport.reportedBy}</h4>
+                                    <p>Time of Report: {formatFirestoreTimestamp(selectedFireReport.timeOfReport)}</p>
+                                    {reportWeatherData[selectedFireReport.id] && (
+                                        <p>
+                                            Weather: {reportWeatherData[selectedFireReport.id].weather[0].description}<br />
+                                            Temperature: {reportWeatherData[selectedFireReport.id].main.temp}°C
+                                        </p>
+                                    )}
+                                </div>
+                            </InfoWindow>
+                        )}
                     </GoogleMap>
                 </div>
             </div>

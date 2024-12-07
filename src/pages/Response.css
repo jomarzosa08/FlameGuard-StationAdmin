@@ -20,7 +20,7 @@
     overflow-y: auto;
 }
 
-.map-container {
+.map-containers {
     flex: 1;
     max-width: 48%;
     height: 100%;

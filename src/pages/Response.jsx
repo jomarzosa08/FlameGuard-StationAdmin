@@ -155,7 +155,7 @@ const Response = () => {
                         </div>
                     </div>
 
-                    <div className="map-container">
+                    <div className="map-containers">
                         <GoogleMap
                             mapContainerStyle={{ width: '100%', height: '100%' }}
                             center={mapCenter}

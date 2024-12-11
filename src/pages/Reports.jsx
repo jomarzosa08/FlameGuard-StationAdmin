@@ -235,28 +235,8 @@ const Reports = () => {
                                         report.floors || 'Unknown'
                                     )}
                                 </div>
-                                <div><strong>Distance to Station:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.distanceToStation || ''}
-                                            onChange={(e) => handleInputChange('distanceToStation', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.distanceToStation || 'Unknown'
-                                    )}
-                                </div>
-                                <div><strong>Housing Space:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.housingSpace || ''}
-                                            onChange={(e) => handleInputChange('housingSpace', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.housingSpace || 'Unknown'
-                                    )}
-                                </div>
+                            
+                                
                                 <div><strong>Fire Spread:</strong>
                                     {isEditing ? (
                                         <input

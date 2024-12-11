@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { updateDoc, doc } from 'firebase/firestore';
-import { firestore } from '../firebaseConfig'; // Firestore configuration
+import { firestore } from '../firebaseConfig';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import './Reports.css'; // Import styles for this component
+import './Reports.css';
 
 const Reports = () => {
     const location = useLocation();
@@ -12,26 +12,43 @@ const Reports = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editableReport, setEditableReport] = useState(report || {});
+    const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+    const [address, setAddress] = useState(''); // To store the geocoded address
 
     useEffect(() => {
-        if (report) {
-            setEditableReport(report); // Initialize editable report with data
+        if (report?.latitude && report?.longitude) {
+            fetchAddress(report.latitude, report.longitude); // Fetch address based on coordinates
         }
     }, [report]);
 
-    if (!report) {
-        return <p>No report details available.</p>;
-    }
-
-    const handleEditToggle = () => {
-        setIsEditing((prev) => !prev); // Toggle edit mode
-        setEditableReport(report); // Reset editable values to original report if cancel is pressed
+    // Geocoding: Fetch the address based on latitude and longitude
+    const fetchAddress = async (lat, lng) => {
+        try {
+            const geocoder = new window.google.maps.Geocoder();
+            const response = await geocoder.geocode({ location: { lat, lng } });
+            if (response.results[0]) {
+                setAddress(response.results[0].formatted_address); // Set the geocoded address
+            } else {
+                setAddress('Address not found');
+            }
+        } catch (error) {
+            console.error('Error fetching address:', error);
+            setAddress('Error fetching address');
+        }
     };
 
+    // Toggle edit mode
+    const handleEditToggle = () => {
+        setIsEditing((prev) => !prev);
+        setEditableReport(report); // Reset to original report values if cancel is clicked
+    };
+
+    // Handle changes in the input fields while editing
     const handleInputChange = (field, value) => {
         setEditableReport((prev) => ({ ...prev, [field]: value }));
     };
 
+    // Save the updated report to Firebase
     const handleSave = async () => {
         try {
             const reportRef = doc(firestore, 'reportDetails', editableReport.id);
@@ -50,12 +67,10 @@ const Reports = () => {
                 floors: editableReport.floors,
                 distanceToStation: editableReport.distanceToStation,
                 housingSpace: editableReport.housingSpace,
-                fireSpread: editableReport.fireSpread, // Add Fire Spread back
+                fireSpread: editableReport.fireSpread,
+                comments: editableReport.comments,
             });
-
-            // Immediately update report after saving to show the updated values
-            setIsEditing(false); // Exit edit mode after saving
-            setEditableReport((prev) => ({ ...prev, ...editableReport })); // Update the display with the saved data
+            setIsEditing(false); // Exit edit mode
             alert('Report information updated successfully!');
         } catch (error) {
             console.error('Error updating report:', error);
@@ -63,18 +78,34 @@ const Reports = () => {
         }
     };
 
+    // Open confirmation modal
+    const handleEditClick = () => {
+        setIsConfirmationOpen(true);
+    };
+
+    // Close the confirmation modal
+    const handleConfirmationClose = (confirm) => {
+        setIsConfirmationOpen(false);
+        if (confirm) {
+            handleSave();
+        }
+    };
+
+    if (!report) {
+        return <p>No report details available.</p>;
+    }
+
     return (
         <div className="dashboard-container">
             <Sidebar />
             <div className="main-content">
                 <Header />
                 <div className="content">
-                    {/* Card Wrapper with Buttons */}
                     <div className="card-wrapper">
                         <div className="action-buttons">
                             <button
                                 className="edit-btn"
-                                onClick={isEditing ? handleSave : handleEditToggle}
+                                onClick={isEditing ? handleEditClick : handleEditToggle}
                             >
                                 {isEditing ? 'Save' : 'Edit Information'}
                             </button>
@@ -87,8 +118,6 @@ const Reports = () => {
                                 </button>
                             )}
                         </div>
-
-                        {/* The Card that holds report details */}
                         <div className="card">
                             <h1>Report Details</h1>
                             <table className="details-table">
@@ -131,28 +160,7 @@ const Reports = () => {
                                                 report.reportedBy || 'Unknown Caller'
                                             )}
                                         </td>
-                                        <td><strong>Latitude:</strong>
-                                            {isEditing ? (
-                                                <input
-                                                    type="number"
-                                                    value={editableReport.latitude || ''}
-                                                    onChange={(e) => handleInputChange('latitude', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.latitude || 'N/A'
-                                            )}
-                                        </td>
-                                        <td><strong>Longitude:</strong>
-                                            {isEditing ? (
-                                                <input
-                                                    type="number"
-                                                    value={editableReport.longitude || ''}
-                                                    onChange={(e) => handleInputChange('longitude', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.longitude || 'N/A'
-                                            )}
-                                        </td>
+                                        <td colSpan="2"><strong>Address:</strong> {address}</td> {/* Display geocoded address */}
                                     </tr>
                                     <tr>
                                         <td colSpan="4"><strong>Description:</strong>
@@ -268,11 +276,34 @@ const Reports = () => {
                                         report.fireSpread || 'Unknown'
                                     )}
                                 </div>
+                                <div><strong>Comments:</strong>
+                                    {isEditing ? (
+                                        <textarea
+                                            value={editableReport.comments || ''}
+                                            onChange={(e) => handleInputChange('comments', e.target.value)}
+                                        />
+                                    ) : (
+                                        report.comments || 'No comments available'
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            {/* Confirmation Modal */}
+            {isConfirmationOpen && (
+                <div className="confirmation-modal">
+                    <div className="modal-content">
+                        <h2>Are you sure your changes are necessary?</h2>
+                        <p>It is important to keep the integrity of the user's data. Please confirm before saving.</p>
+                        <div className="modal-actions">
+                            <button onClick={() => handleConfirmationClose(true)}>Yes, Save</button>
+                            <button onClick={() => handleConfirmationClose(false)}>No, Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

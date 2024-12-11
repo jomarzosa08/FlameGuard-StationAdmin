@@ -15,9 +15,10 @@ const normalize = (value, min, max) => {
 const Dashboard = () => {
     const [reports, setReports] = useState([]);
     const [sortedReports, setSortedReports] = useState([]);
-    const [isDescending, setIsDescending] = useState(true); // Default to descending
+    const [isDescending, setIsDescending] = useState(true);
     const [lastOpenedReport, setLastOpenedReport] = useState(null);
-    const [model, setModel] = useState(null); // Store the TensorFlow model
+    const [model, setModel] = useState(null);
+    const [addressCache, setAddressCache] = useState({});
     const navigate = useNavigate();
 
     // Load TensorFlow.js model
@@ -77,81 +78,44 @@ const Dashboard = () => {
         predictForAllReports();
     }, [model, reports]);
 
-    // Function to determine fire level and append response to description
-    const getFireLevelInfo = (fireSpreadRate) => {
-        if (fireSpreadRate >= 0 && fireSpreadRate < 14) {
-            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
-        } else if (fireSpreadRate >= 14 && fireSpreadRate <= 16) {
-            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
-        } else if (fireSpreadRate > 16 && fireSpreadRate <= 21) {
-            return { level: "Level 2", response: "2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
-        } else if (fireSpreadRate > 21 && fireSpreadRate <= 30) {
-            return { level: "Level 2", response: "2-4 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
-        } else if (fireSpreadRate > 30) {
-            return { level: "Level 3", response: "4-5 fire trucks from nearby fire stations in Cebu City, potential level 3 in 15 mins" };
-        } else {
-            return { level: "No Fire Level", response: "Normal conditions, no specific response required" };
-        }
-    };
+    // Fetch addresses for all reports
+    useEffect(() => {
+        const fetchAddresses = async () => {
+            if (reports.length > 0) {
+                for (const report of reports) {
+                    if (report.latitude && report.longitude && !addressCache[report.id]) {
+                        await fetchAddress(report.id, report.latitude, report.longitude);
+                    }
+                }
+            }
+        };
 
+        fetchAddresses();
+    }, [reports, addressCache]);
 
-    // Predict fire spread and update Firestore
-    const predictFireSpread = async (report) => {
+    const fetchAddress = async (reportId, lat, lng) => {
         try {
-            const normalizedTemperature = normalize(report.temperature, 26, 36);
-            const normalizedHumidity = normalize(report.humidity, 40, 80);
-            const normalizedWindSpeed = normalize(report.windSpeed, 1.5, 8);
-            const normalizedHousingSpace = normalize(report.housingSpace || 0, 0.5, 6);
-            const normalizedBuildingHeight = normalize(report.floors || 1, 1, 10);
-            const normalizedDistanceToStation = normalize(report.distanceToStation || 0.5, 0.5, 3);
-
-            const housingMaterialWood = report.materialType === 'Wood' ? 1 : 0;
-            const housingMaterialBrick = report.materialType === 'Brick' ? 1 : 0;
-            const housingMaterialConcrete = report.materialType === 'Concrete' ? 1 : 0;
-
-            const zoningResidential = report.propertyType === 'Residential' ? 1 : 0;
-            const zoningMixedUse = report.propertyType === 'Mixed-use' ? 1 : 0;
-            const zoningCommercial = report.propertyType === 'Commercial' ? 1 : 0;
-
-            const inputData = [
-                normalizedTemperature,
-                normalizedHumidity,
-                normalizedWindSpeed,
-                normalizedHousingSpace,
-                normalizedBuildingHeight,
-                normalizedDistanceToStation,
-                housingMaterialWood,
-                housingMaterialBrick,
-                housingMaterialConcrete,
-                zoningResidential,
-                zoningMixedUse,
-                zoningCommercial,
-            ];
-
-            const inputTensor = tf.tensor([inputData]);
-            const predictionTensor = model.predict(inputTensor);
-            const prediction = parseFloat(predictionTensor.dataSync()[0].toFixed(2));
-            const { level, response } = getFireLevelInfo(prediction);
-
-            // Clear and update the description field
-            await updateDoc(doc(firestore, 'reportDetails', report.id), {
-                description: '', // Clear the existing description
-            });
-
-            // Update the report with the new values
-            await updateDoc(doc(firestore, 'reportDetails', report.id), {
-                fireSpread: prediction,
-                fireLevel: level,
-                description: response, // Set the description to the recommended response
-            });
-
-            console.log(`Updated report ${report.id}:`, { prediction, level, response });
+            const geocoder = new window.google.maps.Geocoder();
+            const response = await geocoder.geocode({ location: { lat, lng } });
+            if (response.results[0]) {
+                setAddressCache((prev) => ({
+                    ...prev,
+                    [reportId]: response.results[0].formatted_address,
+                }));
+            } else {
+                setAddressCache((prev) => ({
+                    ...prev,
+                    [reportId]: 'Address not found',
+                }));
+            }
         } catch (error) {
-            console.error(`Error predicting fire spread for report ${report.id}:`, error);
+            console.error(`Error fetching address for report ${reportId}:`, error);
+            setAddressCache((prev) => ({
+                ...prev,
+                [reportId]: 'Error fetching address',
+            }));
         }
     };
-
-
 
     const toggleSortOrder = () => {
         setIsDescending((prev) => !prev);
@@ -197,27 +161,41 @@ const Dashboard = () => {
                             sortedReports.map((report) => (
                                 <div key={report.id} className="report-card">
                                     <div className="report-details">
-                                        <p><strong>Title:</strong> Report #{report.number}</p>
+                                        <p><strong>Report #</strong> {report.number}</p>
                                         <p><strong>Caller:</strong> {report.reportedBy || 'Unknown Caller'}</p>
-                                        <p><strong>Location:</strong> {`${report.latitude}, ${report.longitude}`}</p>
-                                        <p>
-                                            <strong>Time:</strong>
+                                        <p><strong>Location:</strong> {addressCache[report.id] || 'Loading...'}</p>
+                                        <p><strong>Time:</strong>
                                             {report.timeOfReport
                                                 ? report.timeOfReport.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
                                                 : 'Unknown Time'}
                                         </p>
-                                        <p><strong>Fire Level:</strong> {report.fireLevel || 'Not predicted'}</p>
                                     </div>
+
                                     <div className="report-description">
                                         <p><strong>Description:</strong> {report.description || 'No description available'}</p>
                                     </div>
-                                    <div className="report-image">
-                                        <img
-                                            src={report.image || 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'}
-                                            alt="Report"
-                                            className="report-image-img"
-                                        />
+
+                                    <div className="report-main-content">
+                                        {/* Report Image */}
+                                        <div className="report-image-container">
+                                            <div className="report-image">
+                                                <img
+                                                    src={report.image || 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'}
+                                                    alt="Report"
+                                                    className="report-image-img"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Fire Level and Status */}
+                                        <div className="fire-info">
+                                            <div className="fire-level-status">
+                                                <p><strong>Fire Level:</strong> {report.fireLevel || 'Not predicted'}</p>
+                                                <p><strong>Status:</strong> {report.status || 'Status not available'}</p>
+                                            </div>
+                                        </div>
                                     </div>
+
                                     <div className="button-container">
                                         <button
                                             className="acknowledge-button"
@@ -230,6 +208,7 @@ const Dashboard = () => {
                                         </button>
                                     </div>
                                 </div>
+
                             ))
                         ) : (
                             <p>No reports found.</p>

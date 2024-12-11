@@ -194,47 +194,48 @@ const Dashboard = () => {
                             </button>
                         </div>
                         {sortedReports.length > 0 ? (
-                            sortedReports.map((report) => (
-                                <div key={report.id} className="report-card">
-                                    <div className="report-details">
-                                        <p><strong>Title:</strong> Report #{report.number}</p>
-                                        <p><strong>Caller:</strong> {report.reportedBy || 'Unknown Caller'}</p>
-                                        <p><strong>Location:</strong> {`${report.latitude}, ${report.longitude}`}</p>
-                                        <p>
-                                            <strong>Time:</strong>
-                                            {report.timeOfReport
-                                                ? report.timeOfReport.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
-                                                : 'Unknown Time'}
-                                        </p>
-                                        <p><strong>Fire Level:</strong> {report.fireLevel || 'Not predicted'}</p>
-                                    </div>
-                                    <div className="report-description">
-                                        <p><strong>Description:</strong> {report.description || 'No description available'}</p>
-                                    </div>
-                                    <div className="report-image">
-                                        <img
-                                            src={report.image && report.image.startsWith('http') ? report.image : 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'}
-                                            alt={`Report ${report.number}`}
-                                            className="report-image-img"
-                                        />
-                                    </div>
-
-                                    <div className="button-container">
-                                        <button
-                                            className="acknowledge-button"
-                                            onClick={() => navigate('/response', { state: { report } })}
-                                        >
-                                            Acknowledge
-                                        </button>
-                                        <button onClick={() => handleViewDetails(report)}>
-                                            View Details
-                                        </button>
-                                    </div>
+                        sortedReports.map((report) => (
+                            <div key={report.id} className="report-card">
+                                <div className="report-details">
+                                    <p> <strong>Report #</strong>{report.number}</p>
+                                    <p><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</p>
+                                    <p><strong>Location:</strong> {`${report.latitude}, ${report.longitude}`}</p>
+                                    <p>
+                                        <strong>Time:</strong>
+                                        {report.timeOfReport
+                                            ? report.timeOfReport.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+                                            : 'Unknown Time'}
+                                    </p>
+                                    <p><strong>Fire Level:</strong> {report.fireLevel || 'Not predicted'}</p>
                                 </div>
-                            ))
-                        ) : (
-                            <p>No reports found.</p>
-                        )}
+                                <div className="report-description">
+                                    <p><strong>Description:</strong> {report.description || 'No description available'}</p>
+                                </div>
+                                <div className="report-image">
+                                    <img
+                                        src={report.image && report.image.startsWith('http') ? report.image : 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'}
+                                        alt={`Report ${report.number}`}
+                                        className="report-image-img"
+                                    />
+                                </div>
+                                {/* Buttons at the bottom */}
+                                <div className="button-container">
+                                    <button
+                                        className="acknowledge-button"
+                                        onClick={() => navigate('/response', { state: { report } })}
+                                    >
+                                        Acknowledge
+                                    </button>
+                                    <button onClick={() => handleViewDetails(report)}>
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No reports found.</p>
+                    )}
+
                     </div>
                 </div>
             </div>

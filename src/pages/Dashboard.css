@@ -2,6 +2,7 @@
     display: flex;
     height: 100vh;
     color: #333;
+    font-family: 'Roboto', sans-serif;
 }
 
 .main-content {
@@ -9,7 +10,7 @@
     padding: 20px;
     width: calc(100% - 250px);
     overflow-y: auto;
-    background-color: #f5f5f5;
+    background-color: #f8f9fa; /* Light gray for cleaner background */
     height: 100vh;
 }
 
@@ -17,93 +18,146 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-left: 50px;
 }
 
 .card {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     width: 100%;
     max-width: 1200px;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
 }
 
-    .card h2 {
-        margin-top: 0;
-        font-size: 20px;
-    }
+.card h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #d32f2f;
+}
 
-.header {
-    background-color: #d32f2f; /* Fire engine red */
-    padding: 20px;
+.header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-radius: 10px;
-    color: #fff;
     margin-bottom: 20px;
-    margin-left: 30px;
 }
 
-    .header h1 {
-        margin: 0;
-        font-size: 24px;
-    }
-
 .report-card {
-    background-color: #ffe0b2; /* Light orange */
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
     margin-bottom: 20px;
-    width: 100%;
-    max-width: 100%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .report-details {
+    padding: 15px 20px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.report-details p {
+    margin: 8px 0;
+    color: #555;
+}
+
+.report-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.report-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.report-image img:hover {
+    transform: scale(1.05);
+}
+
+.report-description {
+    padding: 15px 20px;
+    font-size: 16px;
+    color: #444;
+    border-top: 1px solid #eee;
+    line-height: 1.5;
+}
+
+.button-container {
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
-    margin-bottom: 15px;
+    border-top: 1px solid #eee;
+    background-color: #fafafa;
+}
+
+.button-container button {
+    background-color: #d32f2f;
+    color: #fff;
+    padding: 10px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.button-container button:hover {
+    background-color: #b71c1c;
+    transform: scale(1.05);
+}
+
+.sort-button {
+    background-color: #1976d2;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: none;
     font-size: 14px;
 }
 
-    .report-details p {
-        margin: 0;
-    }
-
-.report-image {
-    margin-bottom: 15px;
+.sort-button:hover {
+    background-color: #1565c0;
 }
 
-    .report-image img {
-        width: 50%;
+@media (min-width: 768px) {
+    .report-card {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .report-details,
+    .report-description {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .report-image {
+        width: 300px;
         height: auto;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
-
-.button-container {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 20px; /* Add bottom margin */
 }
 
-    .button-container button,
-    .sort-button {
-        background-color: #d32f2f; /* Fire engine red */
-        color: #fff;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        font-size: 16px;
+@media (max-width: 768px) {
+    .report-card {
+        flex-direction: column;
     }
-
-        .button-container button:hover,
-        .sort-button:hover {
-            background-color: #b71c1c; /* Darker red for hover effect */
-        }
+}

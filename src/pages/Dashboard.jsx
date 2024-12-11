@@ -213,11 +213,12 @@ const Dashboard = () => {
                                     </div>
                                     <div className="report-image">
                                         <img
-                                            src={report.image || 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'}
-                                            alt="Report"
+                                            src={report.image && report.image.startsWith('http') ? report.image : 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'}
+                                            alt={`Report ${report.number}`}
                                             className="report-image-img"
                                         />
                                     </div>
+
                                     <div className="button-container">
                                         <button
                                             className="acknowledge-button"

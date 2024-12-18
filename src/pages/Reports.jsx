@@ -1,67 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { updateDoc, doc } from 'firebase/firestore';
+import { getDocs, collection, doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig'; // Firestore configuration
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import './Reports.css'; // Import styles for this component
+import './Reports.css';
 
 const Reports = () => {
     const location = useLocation();
-    const { report } = location.state || {};
+    const { report } = location.state || {}; // Extract report from route state
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [editableReport, setEditableReport] = useState(report || {});
+    const [callerInfo, setCallerInfo] = useState({ address: 'N/A', contactNo: 'N/A' });
+    const [responderNames, setResponderNames] = useState('N/A');
+    const [incidentAddress, setIncidentAddress] = useState('Fetching address...');
+    const [fireLevel, setFireLevel] = useState(report?.fireLevel || 'N/A');
 
     useEffect(() => {
         if (report) {
-            setEditableReport(report); // Initialize editable report with data
+            fetchCallerDetails();
+            fetchResponderNames();
+            fetchIncidentAddress(report.latitude, report.longitude);
         }
     }, [report]);
 
-    if (!report) {
-        return <p>No report details available.</p>;
-    }
-
-    const handleEditToggle = () => {
-        setIsEditing((prev) => !prev); // Toggle edit mode
-        setEditableReport(report); // Reset editable values to original report if cancel is pressed
-    };
-
-    const handleInputChange = (field, value) => {
-        setEditableReport((prev) => ({ ...prev, [field]: value }));
-    };
-
-    const handleSave = async () => {
-        try {
-            const reportRef = doc(firestore, 'reportDetails', editableReport.id);
-            await updateDoc(reportRef, {
-                fireLevel: editableReport.fireLevel,
-                status: editableReport.status,
-                reportedBy: editableReport.reportedBy,
-                latitude: editableReport.latitude,
-                longitude: editableReport.longitude,
-                description: editableReport.description,
-                temperature: editableReport.temperature,
-                humidity: editableReport.humidity,
-                windSpeed: editableReport.windSpeed,
-                materialType: editableReport.materialType,
-                propertyType: editableReport.propertyType,
-                floors: editableReport.floors,
-                distanceToStation: editableReport.distanceToStation,
-                housingSpace: editableReport.housingSpace,
-                fireSpread: editableReport.fireSpread, // Add Fire Spread back
+    const fetchCallerDetails = async () => {
+        if (report?.reportedBy) {
+            const callerRef = collection(firestore, 'caller');
+            const snapshot = await getDocs(callerRef);
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const fullName = `${data.firstName} ${data.lastName}`;
+                if (fullName === report.reportedBy) {
+                    setCallerInfo({
+                        address: data.address || 'N/A',
+                        contactNo: data.phoneNumber || 'N/A',
+                    });
+                }
             });
-
-            // Immediately update report after saving to show the updated values
-            setIsEditing(false); // Exit edit mode after saving
-            setEditableReport((prev) => ({ ...prev, ...editableReport })); // Update the display with the saved data
-            alert('Report information updated successfully!');
-        } catch (error) {
-            console.error('Error updating report:', error);
-            alert('Failed to save changes.');
         }
     };
+
+    const fetchResponderNames = async () => {
+        if (report?.assignedResponder?.length > 0) {
+            const respondersRef = collection(firestore, 'responders');
+            const snapshot = await getDocs(respondersRef);
+            const names = [];
+            snapshot.forEach((doc) => {
+                if (report.assignedResponder.includes(doc.id)) {
+                    const data = doc.data();
+                    names.push(data.responder_Name || 'N/A');
+                }
+            });
+            setResponderNames(names.join(' | ') || 'N/A');
+        }
+    };
+
+    const fetchIncidentAddress = async (latitude, longitude) => {
+        try {
+            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
+            const response = await fetch(
+                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
+            );
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                setIncidentAddress(data.results[0].formatted_address);
+            } else {
+                setIncidentAddress('Address not found');
+            }
+        } catch (error) {
+            console.error('Error fetching incident address:', error);
+            setIncidentAddress('Unable to fetch address');
+        }
+    };
+
+    const handleUpdateFireLevel = async () => {
+        const newLevel = window.prompt('Enter the new fire level (1, 2, or 3):');
+        if (newLevel === '1' || newLevel === '2' || newLevel === '3') {
+            try {
+                const reportRef = doc(firestore, 'reports', report.id);
+                await updateDoc(reportRef, { fireLevel: newLevel });
+                setFireLevel(newLevel);
+                alert('Fire level updated successfully!');
+            } catch (error) {
+                console.error('Error updating fire level:', error);
+                alert('Failed to update fire level. Try again.');
+            }
+        } else {
+            alert('Invalid input. Please enter 1, 2, or 3.');
+        }
+    };
+
+    if (!report) return <p>No report details available.</p>;
+
+    const dateOfIncident = new Date(report.timeOfReport).toLocaleDateString();
+    const timeOfIncident = new Date(report.timeOfReport).toLocaleTimeString();
 
     return (
         <div className="dashboard-container">
@@ -69,186 +101,84 @@ const Reports = () => {
             <div className="main-content">
                 <Header />
                 <div className="content">
-                    {/* Card Wrapper with Buttons */}
-                    <div className="card-wrapper">
-                        <div className="action-buttons">
-                            <button
-                                className="edit-btn"
-                                onClick={isEditing ? handleSave : handleEditToggle}
-                            >
-                                {isEditing ? 'Save' : 'Edit Information'}
-                            </button>
-                            {isEditing && (
-                                <button
-                                    className="cancel-btn"
-                                    onClick={handleEditToggle}
-                                >
-                                    Cancel
-                                </button>
-                            )}
-                        </div>
+                    <div className="button-container">
+                        <button onClick={handleUpdateFireLevel} className="update-button">
+                            Update Fire Level
+                        </button>
+                    </div>
 
-                        {/* The Card that holds report details */}
-                        <div className="card">
-                            <h1>Report Details</h1>
+                    <div className="card-wrapper">
+                        <div className="tae">
+                            <h1>REPORT DETAILS</h1>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Incident No.:</strong> {report.number || 'N/A'}</td>
+                                        <td><strong>Fire Level:</strong> {fireLevel}</td>
+                                        <td><strong>Status:</strong> {report.status || 'N/A'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h2>PERSONS INVOLVED</h2>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Reported By:</strong> {report.reportedBy || 'Unknown'}</td>
+                                        <td><strong>Address:</strong> {callerInfo.address}</td>
+                                        <td><strong>Contact No:</strong> {callerInfo.contactNo}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h2>THE INCIDENT</h2>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Date of Incident:</strong> {dateOfIncident}</td>
+                                        <td><strong>Time of Incident:</strong> {timeOfIncident}</td>
+                                        <td><strong>Location:</strong> {incidentAddress}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h2>ACTION RESPONSE</h2>
                             <table className="details-table">
                                 <tbody>
                                     <tr>
-                                        <td><strong>Number:</strong> {report.number}</td>
-                                        <td><strong>ID:</strong> {report.id}</td>
-                                        <td><strong>Fire Level:</strong>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editableReport.fireLevel || ''}
-                                                    onChange={(e) => handleInputChange('fireLevel', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.fireLevel || 'Unknown'
-                                            )}
-                                        </td>
-                                        <td><strong>Status:</strong>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editableReport.status || ''}
-                                                    onChange={(e) => handleInputChange('status', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.status || 'Unknown'
-                                            )}
-                                        </td>
+                                        <td><strong>Responders:</strong> {responderNames}</td>
+                                        <td><strong>Time of Arrival:</strong> N/A</td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Reported By:</strong>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={editableReport.reportedBy || ''}
-                                                    onChange={(e) => handleInputChange('reportedBy', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.reportedBy || 'Unknown Caller'
-                                            )}
-                                        </td>
-                                        <td><strong>Latitude:</strong>
-                                            {isEditing ? (
-                                                <input
-                                                    type="number"
-                                                    value={editableReport.latitude || ''}
-                                                    onChange={(e) => handleInputChange('latitude', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.latitude || 'N/A'
-                                            )}
-                                        </td>
-                                        <td><strong>Longitude:</strong>
-                                            {isEditing ? (
-                                                <input
-                                                    type="number"
-                                                    value={editableReport.longitude || ''}
-                                                    onChange={(e) => handleInputChange('longitude', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.longitude || 'N/A'
-                                            )}
-                                        </td>
+                                        <td colSpan="2"><strong>Response Suggestions:</strong> {report.description || 'N/A'}</td>
                                     </tr>
                                     <tr>
-                                        <td colSpan="4"><strong>Description:</strong>
-                                            {isEditing ? (
-                                                <textarea
-                                                    value={editableReport.description || ''}
-                                                    onChange={(e) => handleInputChange('description', e.target.value)}
-                                                />
-                                            ) : (
-                                                report.description || 'No description available'
-                                            )}
+                                        <td colSpan="2">
+                                            <strong>Responder's Comments:</strong> <br />
+                                            {report.comments || 'No comments available.'}
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div className="vertical-fields">
-                                <div><strong>Temperature:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.temperature || ''}
-                                            onChange={(e) => handleInputChange('temperature', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.temperature || 'N/A'
-                                    )}
-                                </div>
-                                <div><strong>Humidity:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.humidity || ''}
-                                            onChange={(e) => handleInputChange('humidity', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.humidity || 'N/A'
-                                    )}
-                                </div>
-                                <div><strong>Wind Speed:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.windSpeed || ''}
-                                            onChange={(e) => handleInputChange('windSpeed', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.windSpeed || 'Unknown'
-                                    )}
-                                </div>
-                                <div><strong>Material Type:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.materialType || ''}
-                                            onChange={(e) => handleInputChange('materialType', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.materialType || 'Unknown'
-                                    )}
-                                </div>
-                                <div><strong>Property Type:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.propertyType || ''}
-                                            onChange={(e) => handleInputChange('propertyType', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.propertyType || 'Unknown'
-                                    )}
-                                </div>
-                                <div><strong>Floors:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.floors || ''}
-                                            onChange={(e) => handleInputChange('floors', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.floors || 'Unknown'
-                                    )}
-                                </div>
-                            
-                                
-                                <div><strong>Fire Spread:</strong>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={editableReport.fireSpread || ''}
-                                            onChange={(e) => handleInputChange('fireSpread', e.target.value)}
-                                        />
-                                    ) : (
-                                        report.fireSpread || 'Unknown'
-                                    )}
-                                </div>
-                            </div>
+
+                            <h2>FIRE LEVEL CALCULATION</h2>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Temperature (C):</strong> {report.temperature || 'N/A'}</td>
+                                        <td><strong>Humidity (%):</strong> {report.humidity || 'N/A'}</td>
+                                        <td><strong>Windspeed (mph):</strong> {report.windSpeed || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Material:</strong> {report.materialType || 'N/A'}</td>
+                                        <td><strong>Property:</strong> {report.propertyType || 'N/A'}</td>
+                                        <td><strong>Floors:</strong> {report.floors || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan="3"><strong>Fire Spread (m/min):</strong> {report.fireSpread || 'N/A'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

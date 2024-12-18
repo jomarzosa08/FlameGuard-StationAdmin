@@ -1,10 +1,67 @@
 /* Header.css */
 
 .header {
-  background: linear-gradient(135deg, #f06, #f90);
-    padding: 20px;
-    border-radius: 10px;
-    color: #fff;
-    margin-bottom: 20px;
+  background: radial-gradient(circle at center, #ff4500, #ff6347, #8b0000);
+  padding: 30px;
+  border-radius: 10px;
+  color: #ffffff;
+  margin-bottom: 20px;
+  box-shadow: 0 0 15px rgba(255, 69, 0, 0.7), 0 0 30px rgba(255, 140, 0, 0.6);
+  overflow: hidden;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  animation: flicker 3s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 69, 0, 0.8), 0 0 30px rgba(255, 140, 0, 0.6);
   }
-  
+  50% {
+    box-shadow: 0 0 20px rgba(255, 69, 0, 1), 0 0 40px rgba(255, 140, 0, 0.9);
+  }
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px #ff4500, 0 0 20px #ff6347;
+  color: #ffffff;
+}
+
+.flameguard-logo {
+  width: 50px; /* Adjust the size here */
+  height: 50px; /* Maintain aspect ratio */
+  margin-right: 10px; /* Add spacing between the image and text */
+}
+
+.date-time {
+  font-size: 1.2rem;
+  font-weight: lighter;
+  font-style: italic;
+  text-shadow: 0 0 5px #ff4500, 0 0 10px #ff6347;
+}
+
+.fire-animation {
+  animation: flame 1s infinite;
+  display: inline-block;
+  margin: 0 5px;
+}
+
+@keyframes flame {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(-10deg);
+  }
+}

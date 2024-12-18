@@ -121,41 +121,61 @@ const Response = () => {
     if (!report) return <p>No fire report details provided.</p>;
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container fire-theme">
             <Sidebar />
             <div className="main-content">
-                <div className="response-layout">
-                    <div className="details-container">
-                        <div className="card">
-                            <h1>Response Plan</h1>
-                            <h3>Fire Report Details:</h3>
-                            <p><strong>Location:</strong> {report.latitude}, {report.longitude}</p>
-                            <p><strong>Description:</strong> {report.description || 'No description available'}</p>
-
-                            <h3>Nearest Responders:</h3>
+                <div className="response-layout-fire">
+                    <div className="details-container-fire">
+                        <div className="card fire-card">
+                            <div className="response-header">
+                                <h1 className="response-title">Response Plan</h1>
+                            </div>
+                                <div className="report-details-container">
+                                    <h2 className="section-title">🚨 Fire Report Details</h2>
+                                    <div className="report-detail">
+                                        <p><strong>📍 Location:</strong> <span className="detail-text">{report.latitude}, {report.longitude}</span></p>
+                                    </div>
+                                    <div className="report-detail">
+                                        <p><strong>📝 Description:</strong> <span className="detail-text">{report.description || 'No description available'}</span></p>
+                                    </div>
+                                </div>
+                                <br />
+                                <div className="response-header">
+                                    <h1 className="response-title">Nearest Responders:</h1>
+                                </div>
                             {responders.length > 0 ? (
-                                <ul>
+                                <ul className="responder-list-fire">
                                     {responders.slice(0, 3).map((responder) => (
-                                        <li key={responder.id}>
-                                            <strong>{responder.respondents_Name}</strong> - {responder.distance.toFixed(2)} km away
-                                            <p>Address: {responder.respondents_Address}</p>
-                                            <p>Contact: {responder.respondents_Contact}</p>
-                                            <button onClick={() => getDirectionsAndETA(responder)}>
-                                                Show Path
-                                            </button>
-                                            <button onClick={() => notifyResponder(responder)}>
-                                                Notify Responder
-                                            </button>
+                                        <li key={responder.id} className="responder-item-fire">
+                                            <p><strong>{responder.respondents_Name}</strong> - {responder.distance.toFixed(2)} km away</p>
+                                            <br />
+                                            <p> <strong>Address:</strong> {responder.respondents_Address}</p>
+                                            <br />
+                                            <p> <strong>Contact: </strong>{responder.respondents_Contact}</p>
+                                            <div className="button-group">
+                                                <button
+                                                    className="btn fire-btn show-path-btn"
+                                                    onClick={() => getDirectionsAndETA(responder)}
+                                                >
+                                                    Show Path
+                                                </button>
+                                                <button
+                                                    className="btn fire-btn notify-btn"
+                                                    onClick={() => notifyResponder(responder)}
+                                                >
+                                                    Notify Responder
+                                                </button>
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
                             ) : (
-                                <p>No nearby responders found.</p>
+                                <p className="no-responders">No nearby responders found.</p>
                             )}
                         </div>
                     </div>
-
-                    <div className="map-containers">
+    
+                    <div className="map-container-fire">
                         <GoogleMap
                             mapContainerStyle={{ width: '100%', height: '100%' }}
                             center={mapCenter}
@@ -168,6 +188,9 @@ const Response = () => {
             </div>
         </div>
     );
+    
+    
+    
 };
 
 export default Response;

@@ -1,63 +1,153 @@
-/* src/pages/Login.css */
+/* Page Background */
 .login-page {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(135deg, #f06, #f90);
+    background: linear-gradient(135deg, #ff4500, #ff6a00, #ffd700);
+    animation: backgroundFlow 8s ease-in-out infinite;
+    background-size: 400% 400%;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
 }
 
+/* Background Animation */
+@keyframes backgroundFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Container Styling */
 .login-container {
     width: 100%;
-    max-width: 400px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    max-width: 490px;
+    background: rgba(252, 252, 252, 0.85);
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Flame Glow Effect */
+.login-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 69, 0, 0.6), transparent);
+    z-index: -1;
+    animation: glowEffect 5s infinite ease-in-out;
+}
+
+/* Glow Animation */
+@keyframes glowEffect {
+    0%, 100% { filter: brightness(0.8); }
+    50% { filter: brightness(1); }
+}
+
+/* Login Form Styling */
 .login-form h1 {
     margin-bottom: 20px;
-    font-size: 24px;
-    color: #333;
+    font-size: 1.8rem;
+    color: #ffd700;
+    text-shadow: 0 0 10px #ff6a00, 0 0 20px #ff4500;
+    font-weight: bold;
 }
 
 .form-group {
     margin-bottom: 20px;
+    text-align: left;
 }
 
 label {
     display: block;
-    font-weight: bold;
+    font-size: 1rem;
+    color: #ffd700;
     margin-bottom: 5px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
 }
 
 input {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #ff6a00;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 1rem;
+    color: #fff;
+    outline: none;
+    transition: box-shadow 0.3s ease;
 }
 
+input:focus {
+    box-shadow: 0 0 10px #ffd700, 0 0 20px #ff4500;
+}
+
+/* Error Message */
+.error-message {
+    color: #ff6a00;
+    font-size: 0.9rem;
+    margin: 10px 0;
+    text-shadow: 0 0 5px #ffd700;
+}
+
+/* Submit Button */
 button {
     width: 100%;
     padding: 12px;
-    background-color: #007bff;
-    color: #fff;
+    background: linear-gradient(45deg, #ff4500, #ff6a00, #ffd700);
+    color: #000;
     border: none;
     border-radius: 5px;
-    font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 button:hover {
-    background-color: #0056b3;
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-.error-message {
-    color: red;
-    margin: 0.5rem 0;
+button:active {
+    animation: flameBurst 0.3s ease-out;
+}
+
+@keyframes flameBurst {
+    0% { box-shadow: 0 0 20px #ffd700, 0 0 40px #ff6a00; }
+    100% { box-shadow: 0 0 5px #ffd700, 0 0 10px #ff4500; }
+}
+
+/* Register Link */
+.register-link {
+    margin-top: 20px;
+    color: #ffd700;
     font-size: 0.9rem;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.register-link:hover {
+    color: #ff4500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
 }

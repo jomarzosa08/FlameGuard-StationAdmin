@@ -1,45 +1,90 @@
 /* Sidebar.css */
 
 .sidebar {
-    width: 250px;
-    background: linear-gradient(135deg, #f06, #f90);
+    width: 260px;
+    background: radial-gradient(circle, #8b0000, #ff4500, #ff6347, #ffd700);
     color: #fff;
     display: flex;
     flex-direction: column;
     position: fixed;
     height: 100vh;
     padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
-    transition: width 0.3s ease;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+    transition: width 0.3s ease-in-out;
+    animation: slideIn 0.8s ease-out;
+    overflow: hidden;
 }
 
-.sidebar img {
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.sidebar-logo {
     display: block;
-    margin: 0 auto 10px; 
-    width: 120px;
-    height: auto; 
+    margin: 0 auto 20px;
+    width: 100px;
+    height: auto;
     max-width: 100%;
+    animation: pulse 1.5s infinite;
 }
 
-.sidebar h2 {
-    font-size: 1.5rem;
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.sidebar-title {
+    font-size: 1.8rem;
     text-align: center;
     margin-bottom: 1.5rem;
+    text-shadow: 0 0 10px #ff4500, 0 0 20px #ff6347;
 }
 
+.sidebar-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
 
 .sidebar a {
-    padding: 1rem 0;
-    border-bottom: 1px solid #444;
-    transition: background-color 0.3s;
+    padding: 1rem;
+    border-radius: 5px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    text-shadow: 0 0 5px #ff4500, 0 0 10px #ff6347;
+    transition: background-color 0.4s, transform 0.3s;
+    display: flex;
+    align-items: center;
 }
 
 .sidebar a:hover {
-    background-color: #444;
+    background-color: rgba(255, 69, 0, 0.8);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px #ff4500, 0 0 30px #ff6347;
+}
+
+.sidebar a:active {
+    transform: scale(0.95);
 }
 
 @media screen and (max-width: 768px) {
     .sidebar {
         width: 200px;
+    }
+    .sidebar-title {
+        font-size: 1.5rem;
+    }
+    .sidebar a {
+        font-size: 0.9rem;
     }
 }

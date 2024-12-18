@@ -51,7 +51,7 @@ const LoginForm = () => {
         <div className="login-container">
             <form className="login-form" onSubmit={handleLogin}>
                 <img src="flameguard-logo.png" alt="logo" className="login-logo" />
-                <h1>FlameGuard Admin Login</h1>
+                <h1>FlameGuard</h1>
                 <div className="form-group">
                     <label htmlFor="email">Email:</label>
                     <input

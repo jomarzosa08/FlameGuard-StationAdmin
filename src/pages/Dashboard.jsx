@@ -46,7 +46,22 @@ const Dashboard = () => {
                     timeOfReport: doc.data().timeOfReport?.toDate(),
                 }));
 
-                const sortedByTime = reportsData.sort(
+                // Get today's date for filtering
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Set time to the start of today
+                const endOfDay = new Date(today);
+                endOfDay.setHours(23, 59, 59, 999); // Set time to the end of today
+
+                // Filter reports to only include today's reports with "on going" status
+                const todayReports = reportsData.filter(
+                    (report) =>
+                        report.status === 'on going' &&
+                        report.timeOfReport &&
+                        report.timeOfReport >= today &&
+                        report.timeOfReport <= endOfDay
+                );
+
+                const sortedByTime = todayReports.sort(
                     (a, b) => (a.timeOfReport || new Date(0)) - (b.timeOfReport || new Date(0))
                 );
 
@@ -54,6 +69,7 @@ const Dashboard = () => {
                     ...report,
                     number: index + 1,
                 }));
+                
 
                 setReports(numberedReports);
             } catch (error) {
@@ -93,7 +109,6 @@ const Dashboard = () => {
             return { level: "No Fire Level", response: "Normal conditions, no specific response required" };
         }
     };
-
 
     // Predict fire spread and update Firestore
     const predictFireSpread = async (report) => {
@@ -151,8 +166,6 @@ const Dashboard = () => {
         }
     };
 
-
-
     const toggleSortOrder = () => {
         setIsDescending((prev) => !prev);
     };
@@ -181,67 +194,79 @@ const Dashboard = () => {
     }, [reports, isDescending]);
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container fire-theme">
             <Sidebar onViewReportClick={handleViewReportFromSidebar} />
             <div className="main-content">
                 <Header />
                 <div className="content">
                     <div className="card">
                         <div className="header-row">
-                            <h2>Incoming Reports</h2>
+                            <h2>🔥 Incoming Reports</h2>
                             <button
                                 onClick={toggleSortOrder}
                                 className="sort-button"
                                 aria-label={`Toggle sort order to ${isDescending ? 'ascending' : 'descending'}`}
                             >
-                                {isDescending ? 'Sort Ascending' : 'Sort Descending'}
+                                {isDescending ? 'Sort Ascending 🔺' : 'Sort Descending 🔻'}
                             </button>
                         </div>
                         {sortedReports.length > 0 ? (
-                            sortedReports.map((report) => (
-                                <div key={report.id} className="report-card">
-                                    <div className="report-details">
-                                        <p><strong>Report #:</strong> {report.number}</p>
-                                        <p><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</p>
-                                        <p><strong>Location:</strong> {`${report.latitude}, ${report.longitude}`}</p>
-                                        <p>
-                                            <strong>Time:</strong>{' '}
-                                            {report.timeOfReport
-                                                ? report.timeOfReport.toLocaleString([], {
-                                                      dateStyle: 'short',
-                                                      timeStyle: 'short',
-                                                  })
-                                                : 'Unknown Time'}
-                                        </p>
-                                        <p><strong>Fire Level:</strong> {report.fireLevel || 'Not Predicted'}</p>
+                            <div className="report-grid">
+                                {sortedReports.map((report) => (
+                                    <div key={report.id} className="report-card">
+                                        <div className="report-content">
+                                            <h3>Report #{report.number}</h3>
+                                            <div className="report-details-horizontal">
+                                                <div className="report-details-item">
+                                                    <p><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</p>
+                                                </div>
+                                                <div className="report-details-item">
+                                                    <p><strong>Location:</strong> {`${report.latitude}, ${report.longitude}`}</p>
+                                                </div>
+                                                <div className="report-details-item">
+                                                    <p>
+                                                        <strong>Time:</strong>{' '}
+                                                        {report.timeOfReport
+                                                            ? report.timeOfReport.toLocaleString([], {
+                                                                dateStyle: 'short',
+                                                                timeStyle: 'short',
+                                                            })
+                                                            : 'Unknown Time'}
+                                                    </p>
+                                                </div>
+                                                <div className="report-details-item">
+                                                    <p><strong>Fire Level:</strong> {report.fireLevel || 'Not Predicted'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="report-details-item">
+                                                <p><strong>Description:</strong> {report.description || 'No description available'}</p>
+                                            </div>
+                                            <div className="report-image">
+                                                <img
+                                                    src={
+                                                        report.image && report.image.startsWith('http')
+                                                            ? report.image
+                                                            : 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'
+                                                    }
+                                                    alt={`Report ${report.number}`}
+                                                    className="report-image-img"
+                                                />
+                                            </div>
+                                            <div className="button-container">
+                                                <button
+                                                    className="acknowledge-button"
+                                                    onClick={() => navigate('/response', { state: { report } })}
+                                                >
+                                                    Acknowledge 🔥
+                                                </button>
+                                                <button onClick={() => handleViewDetails(report)} aria-label="View Details">
+                                                    View Details 🔍
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="report-description">
-                                        <p><strong>Description:</strong> {report.description || 'No description available'}</p>
-                                    </div>
-                                    <div className="report-image">
-                                        <img
-                                            src={
-                                                report.image && report.image.startsWith('http')
-                                                    ? report.image
-                                                    : 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'
-                                            }
-                                            alt={`Report ${report.number}`}
-                                            className="report-image-img"
-                                        />
-                                    </div>
-                                    <div className="button-container">
-                                        <button
-                                            className="acknowledge-button"
-                                            onClick={() => navigate('/response', { state: { report } })}
-                                        >
-                                            Acknowledge
-                                        </button>
-                                        <button onClick={() => handleViewDetails(report)} aria-label="View Details">
-                                            View Details
-                                        </button>
-                                    </div>
-                                </div>
-                            ))
+                                ))}
+                            </div>
                         ) : (
                             <p>No reports found.</p>
                         )}
@@ -250,6 +275,7 @@ const Dashboard = () => {
             </div>
         </div>
     );
+    
 };
 
 export default Dashboard;

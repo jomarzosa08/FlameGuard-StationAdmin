@@ -1,8 +1,25 @@
+/* General Theme */
 .dashboard-container {
     display: flex;
     height: 100vh;
-    color: #333;
     font-family: 'Roboto', sans-serif;
+    color: #fff;
+    background: linear-gradient(to bottom, #1b1b1b, #2e2e2e);
+}
+
+/* Add fire effects */
+.dashboard-container.fire-theme {
+    background: radial-gradient(circle at center, #ff4500, #1b1b1b 80%);
+    animation: flicker 3s infinite alternate ease-in-out;
+}
+
+@keyframes flicker {
+    0%, 100% {
+        background: radial-gradient(circle at center, #ff5722, #1b1b1b 80%);
+    }
+    50% {
+        background: radial-gradient(circle at center, #ff7043, #1b1b1b 80%);
+    }
 }
 
 .main-content {
@@ -10,32 +27,27 @@
     padding: 20px;
     width: calc(100% - 250px);
     overflow-y: auto;
-    background-color: #f4f5f7;
-    height: 100vh;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(25, 25, 25, 0.9));
+    box-shadow: 0px 4px 10px rgba(255, 69, 0, 0.7);
+}
+
+/* Content Enhancements */
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .content {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-.card {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    width: 100%;
+    gap: 30px;
     max-width: 1200px;
-}
-
-.card h2 {
-    font-size: 26px;
-    font-weight: bold;
-    text-align: center;
-    color: #d32f2f;
-    margin-bottom: 20px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .header-row {
@@ -45,114 +57,135 @@
     margin-bottom: 20px;
 }
 
+/* Cards */
+.card {
+    background: linear-gradient(to bottom, rgba(62, 62, 62, 0.9), rgba(38, 38, 38, 0.9));
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(255, 69, 0, 0.7);
+    width: 100%;
+    border: 2px solid rgba(255, 69, 0, 0.7);
+}
+
+/* Report Cards */
 .report-card {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 12px;
+    background: linear-gradient(to bottom, rgba(39, 39, 39, 0.9), rgba(27, 27, 27, 0.9));
+    border: 1px solid rgba(255, 69, 0, 0.7);
+    border-radius: 16px;
+    box-shadow: 0 6px 12px rgba(255, 69, 0, 0.7);
     overflow: hidden;
-    margin-bottom: 20px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 30px;
 }
 
 .report-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-.report-details {
-    padding: 20px;
-    font-size: 15px;
-    color: #555;
-    line-height: 1.6;
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(255, 69, 0, 1);
 }
 
 .report-image {
     width: 100%;
-    height: 200px;
+    background-color: #1a1a1a;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f4f4f4;
+    overflow: hidden; /* To prevent overflow if the image is larger than the container */
 }
 
 .report-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 12px;
-    transition: transform 0.3s ease;
+    max-width: 100%; /* Ensures the image fits within the container's width */
+    height: auto; /* Maintains the image's original aspect ratio */
+    border-bottom: 1px solid rgba(255, 69, 0, 0.5);
 }
 
-.report-image img:hover {
-    transform: scale(1.05);
+.report-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.report-details h3 {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ff5722;
+    margin-bottom: 10px;
 }
 
 .report-description {
-    padding: 20px;
-    font-size: 16px;
-    color: #444;
-    border-top: 1px solid #eee;
+    font-size: 15px;
+    color: #bbb;
+}
+
+.report-details-horizontal {
+    display: flex; /* Align children horizontally */
+    justify-content: space-between; /* Add spacing between items */
+    align-items: left; /* Vertically align items */
+    gap: 1rem; /* Adds spacing between flex items */
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}   
+
+.report-details-item {
+    text-align: left; /* Center-align content */
+    min-width: 120px; /* Prevent shrinking */
+    font-size: 15px;
 }
 
 .button-container {
-    padding: 20px;
     display: flex;
     justify-content: space-between;
-    border-top: 1px solid #eee;
+    gap: 20px;
+    margin-top: 20px;
 }
 
+/* Buttons */
 .button-container button {
-    background-color: #d32f2f;
+    flex: 1;
+    padding: 15px 20px;
+    font-size: 16px;
     color: #fff;
-    padding: 12px 20px;
-    font-size: 14px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    background: linear-gradient(to right, #ff4500, #ff5722);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s, background-color 0.3s;
 }
 
 .button-container button:hover {
-    background-color: #b71c1c;
     transform: scale(1.1);
+    background: linear-gradient(to right, #ff7043, #ff4500);
 }
 
 .sort-button {
-    background-color: #1976d2;
+    background: linear-gradient(to right, #d32f2f, #b71c1c);
     color: #fff;
-    padding: 10px 15px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
     font-size: 14px;
     border: none;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s;
+    max-width: 200px; /* Set a maximum width */
+    text-overflow: ellipsis; /* Handle overflow gracefully */
+    white-space: nowrap; /* Prevent the text from wrapping */
+    overflow: hidden; /* Ensure the button does not grow too large */
 }
 
 .sort-button:hover {
-    background-color: #1565c0;
-}
-
-
-@media (min-width: 768px) {
-    .report-card {
-        display: flex;
-        flex-direction: row;
-    }
-
-    .report-details,
-    .report-description {
-        flex: 1;
-        padding: 20px;
-    }
-
-    .report-image {
-        width: 300px;
-        height: auto;
-    }
+    background: linear-gradient(to right, #b71c1c, #7f0000);
 }
 
 @media (max-width: 768px) {
-    .report-card {
-        flex-direction: column;
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .content {
+        padding: 10px;
     }
 }

@@ -11,9 +11,11 @@ const Reports = () => {
     const { report } = location.state || {}; // Extract report from route state
 
     const [callerInfo, setCallerInfo] = useState({ address: 'N/A', contactNo: 'N/A' });
-    const [responderNames, setResponderNames] = useState('N/A');
+    const [responderNames, setResponderNames] = useState(['No responders assigned']);
     const [incidentAddress, setIncidentAddress] = useState('Fetching address...');
     const [fireLevel, setFireLevel] = useState(report?.fireLevel || 'N/A');
+    const [selectedFireLevel, setSelectedFireLevel] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         if (report) {
@@ -41,17 +43,25 @@ const Reports = () => {
     };
 
     const fetchResponderNames = async () => {
-        if (report?.assignedResponder?.length > 0) {
-            const respondersRef = collection(firestore, 'responders');
-            const snapshot = await getDocs(respondersRef);
-            const names = [];
-            snapshot.forEach((doc) => {
-                if (report.assignedResponder.includes(doc.id)) {
-                    const data = doc.data();
-                    names.push(data.responder_Name || 'N/A');
-                }
-            });
-            setResponderNames(names.join(' | ') || 'N/A');
+        try {
+            if (report?.assignedResponder?.length > 0) {
+                const respondersRef = collection(firestore, 'responders');
+                const snapshot = await getDocs(respondersRef);
+
+                // Filter responders based on assignedResponder UIDs and map their names
+                const assignedNames = snapshot.docs
+                    .filter((doc) => report.assignedResponder.includes(doc.id))
+                    .map((doc) => doc.data().respondents_Name || 'N/A')
+                    .reverse(); // Reverse to display most recent first
+
+                // Set responderNames as an array for rendering individual rows
+                setResponderNames(assignedNames.length ? assignedNames : ['No responders assigned']);
+            } else {
+                setResponderNames(['No responders assigned']);
+            }
+        } catch (error) {
+            console.error('Error fetching responder names:', error);
+            setResponderNames(['Error fetching responders']);
         }
     };
 
@@ -74,26 +84,33 @@ const Reports = () => {
     };
 
     const handleUpdateFireLevel = async () => {
-        const newLevel = window.prompt('Enter the new fire level (1, 2, or 3):');
-        if (newLevel === '1' || newLevel === '2' || newLevel === '3') {
+        if (selectedFireLevel) {
             try {
-                const reportRef = doc(firestore, 'reports', report.id);
-                await updateDoc(reportRef, { fireLevel: newLevel });
-                setFireLevel(newLevel);
-                alert('Fire level updated successfully!');
+                // Update the fire level in the `reportDetails` collection
+                const reportRef = doc(firestore, 'reportDetails', report.id); // Correct collection and document ID
+                await updateDoc(reportRef, { fireLevel: selectedFireLevel }); // Update the fireLevel field
+                setFireLevel(selectedFireLevel); // Update the local state
+                closeModal(); // Close modal immediately after success
             } catch (error) {
                 console.error('Error updating fire level:', error);
-                alert('Failed to update fire level. Try again.');
+                alert('Failed to update fire level. Try again.'); // Keep alert only for errors
             }
         } else {
-            alert('Invalid input. Please enter 1, 2, or 3.');
+            alert('Please select a valid fire level.');
         }
+    };
+
+
+
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => {
+        setSelectedFireLevel('');
+        setIsModalOpen(false);
     };
 
     if (!report) return <p>No report details available.</p>;
 
-    const dateOfIncident = new Date(report.timeOfReport).toLocaleDateString();
-    const timeOfIncident = new Date(report.timeOfReport).toLocaleTimeString();
+    const dateTimeOfIncident = new Date(report.timeOfReport).toLocaleString(); // Combine date and time
 
     return (
         <div className="dashboard-container">
@@ -101,11 +118,38 @@ const Reports = () => {
             <div className="main-content">
                 <Header />
                 <div className="content">
-                    <div className="button-container">
-                        <button onClick={handleUpdateFireLevel} className="update-button">
-                            Update Fire Level
-                        </button>
-                    </div>
+                    <button
+                        className="update-button"
+                        style={{ width: '100px' }}
+                        onClick={openModal}
+                    >
+                        Update
+                    </button>
+
+                    {isModalOpen && (
+                        <div className="modal-overlay">
+                            <div className="modal">
+                                <h2>Escalate to which fire level?</h2>
+                                <select
+                                    value={selectedFireLevel}
+                                    onChange={(e) => setSelectedFireLevel(e.target.value)}
+                                >
+                                    <option value="">Select Fire Level</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                                <div className="modal-actions">
+                                    <button className="confirm-button" onClick={handleUpdateFireLevel}>
+                                        Confirm
+                                    </button>
+                                    <button className="cnl-button" onClick={closeModal}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="card-wrapper">
                         <div className="tae">
@@ -113,9 +157,9 @@ const Reports = () => {
                             <table>
                                 <tbody>
                                     <tr>
-                                        <td><strong>Incident No.:</strong> {report.number || 'N/A'}</td>
-                                        <td><strong>Fire Level:</strong> {fireLevel}</td>
-                                        <td><strong>Status:</strong> {report.status || 'N/A'}</td>
+                                        <td id="incident-number"><strong>Incident No:</strong> {report.number || 'N/A'}</td>
+                                        <td id="fire-level"><strong>Fire Level:</strong> <span className="fire-level-value">{fireLevel}</span></td>
+                                        <td id="status"><strong>Status:</strong> <span className="status-value">{report.status || 'N/A'}</span></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -124,20 +168,18 @@ const Reports = () => {
                             <table>
                                 <tbody>
                                     <tr>
-                                        <td><strong>Reported By:</strong> {report.reportedBy || 'Unknown'}</td>
-                                        <td><strong>Address:</strong> {callerInfo.address}</td>
-                                        <td><strong>Contact No:</strong> {callerInfo.contactNo}</td>
+                                        <td id="reported-by"><strong>Reported By:</strong> {report.reportedBy || 'Unknown'}</td>
+                                        <td id="address"><strong>Address:</strong> {callerInfo.address}</td>
+                                        <td id="contact-no"><strong>Contact No:</strong> {callerInfo.contactNo}</td>
                                     </tr>
                                 </tbody>
                             </table>
-
                             <h2>THE INCIDENT</h2>
                             <table>
                                 <tbody>
                                     <tr>
-                                        <td><strong>Date of Incident:</strong> {dateOfIncident}</td>
-                                        <td><strong>Time of Incident:</strong> {timeOfIncident}</td>
-                                        <td><strong>Location:</strong> {incidentAddress}</td>
+                                        <td id="incident-datetime"><strong>Date and Time of Incident:</strong> {dateTimeOfIncident}</td>
+                                        <td id="incident-location"><strong>Location:</strong> {incidentAddress}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -145,15 +187,19 @@ const Reports = () => {
                             <h2>ACTION RESPONSE</h2>
                             <table className="details-table">
                                 <tbody>
+                                    {responderNames.map((name, index) => (
+                                        <tr key={index}>
+                                            <td id={`responder-${index}`}>
+                                                <strong>Responder Name:</strong> {name}
+                                            </td>
+                                            <td id={`time-of-arrival-${index}`}><strong>Time of Arrival:</strong> N/A</td>
+                                        </tr>
+                                    ))}
                                     <tr>
-                                        <td><strong>Responders:</strong> {responderNames}</td>
-                                        <td><strong>Time of Arrival:</strong> N/A</td>
+                                        <td id="response-suggestions" colSpan="2"><strong>Response Suggestions:</strong> {report.description || 'N/A'}</td>
                                     </tr>
                                     <tr>
-                                        <td colSpan="2"><strong>Response Suggestions:</strong> {report.description || 'N/A'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan="2">
+                                        <td id="responder-comments" colSpan="2">
                                             <strong>Responder's Comments:</strong> <br />
                                             {report.comments || 'No comments available.'}
                                         </td>
@@ -161,21 +207,22 @@ const Reports = () => {
                                 </tbody>
                             </table>
 
+
                             <h2>FIRE LEVEL CALCULATION</h2>
                             <table>
                                 <tbody>
                                     <tr>
-                                        <td><strong>Temperature (C):</strong> {report.temperature || 'N/A'}</td>
-                                        <td><strong>Humidity (%):</strong> {report.humidity || 'N/A'}</td>
-                                        <td><strong>Windspeed (mph):</strong> {report.windSpeed || 'N/A'}</td>
+                                        <td id="temperature"><strong>Temperature (C):</strong> {report.temperature || 'N/A'}</td>
+                                        <td id="humidity"><strong>Humidity (%):</strong> {report.humidity || 'N/A'}</td>
+                                        <td id="windspeed"><strong>Windspeed (mph):</strong> {report.windSpeed || 'N/A'}</td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Material:</strong> {report.materialType || 'N/A'}</td>
-                                        <td><strong>Property:</strong> {report.propertyType || 'N/A'}</td>
-                                        <td><strong>Floors:</strong> {report.floors || 'N/A'}</td>
+                                        <td id="material"><strong>Material:</strong> {report.materialType || 'N/A'}</td>
+                                        <td id="property"><strong>Property:</strong> {report.propertyType || 'N/A'}</td>
+                                        <td id="floors"><strong>Floors:</strong> {report.floors || 'N/A'}</td>
                                     </tr>
                                     <tr>
-                                        <td colSpan="3"><strong>Fire Spread (m/min):</strong> {report.fireSpread || 'N/A'}</td>
+                                        <td id="fire-spread" colSpan="3"><strong>Fire Spread (m/min):</strong> {report.fireSpread || 'N/A'}</td>
                                     </tr>
                                 </tbody>
                             </table>

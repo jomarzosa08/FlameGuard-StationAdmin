@@ -45,7 +45,7 @@
 /* Header Styling */
 h1, h2 {
     font-size: 1.5em;
-    text-align: center;
+    text-align: left;
     color: #444;
     text-shadow: 0 0 8px rgba(255, 136, 0, 0.7); /* Glowing effect */
     margin-top: 20px;
@@ -62,7 +62,7 @@ h1 {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 5px;
+    margin-top: 10px;
     background-color: #ffe0b2; /* Match the card background */
     border-radius: 10px;
     overflow: hidden;
@@ -100,7 +100,7 @@ table {
 
         table td strong {
             display: inline-block;
-            width: 160px; /* Fixed width for labels */
+            width: 180px; /* Fixed width for labels */
             font-weight: 600;
             color: #333;
             margin-bottom: 3px;
@@ -141,7 +141,9 @@ table {
 
 .button-container {
     display: flex;
-    justify-content: flex-end;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
     margin-bottom: 10px;
 }
 
@@ -153,8 +155,162 @@ table {
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
+    width: auto; /* Button matches content width */
+    align-self:end;
 }
 
     .update-button:hover {
         background-color: #e64a19;
     }
+
+.fire-level-select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: white;
+}
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal Box */
+.modal {
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+    .modal h2 {
+        font-size: 1.5em;
+        color: #333; /* Plain and readable */
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    /* Dropdown Styling */
+    .modal select {
+        width: 100%; /* Full width dropdown */
+        padding: 10px 15px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        outline: none;
+        margin-bottom: 20px; /* Add space below */
+        background-color: #f9f9f9; /* Light background */
+        color: #555; /* Consistent text color */
+        transition: border-color 0.3s ease;
+    }
+
+        .modal select:focus {
+            border-color: #ff7043; /* Highlight border on focus */
+        }
+
+/* Modal Actions - Buttons */
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px; /* Space between buttons */
+}
+
+.confirm-button, .cnl-button {
+    flex: 1; /* Equal button sizes */
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-sizing: border-box; /* Ensure consistent box model */
+    transition: background-color 0.3s ease;
+}
+
+.confirm-button {
+    background-color: #28a745;
+    color: #fff;
+}
+
+    .confirm-button:hover {
+        background-color: #218838; /* Darker green on hover */
+    }
+
+.cnl-button {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+    .cnl-button:hover {
+        background-color: #c82333; /* Darker red on hover */
+    }
+/* Align specific cells */
+#incident-number {
+    text-align: left;
+}
+
+#fire-level {
+    text-align: center;
+}
+
+#status {
+    text-align: right;
+}
+
+#reported-by {
+    text-align: left;
+}
+
+#address {
+    text-align: center;
+}
+
+#contact-no {
+    text-align: right;
+}
+/* THE INCIDENT */
+#incident-datetime {
+    text-align: left;
+}
+#incident-location {
+    text-align: right;
+}
+
+/* ACTION RESPONSE */
+#responders {
+    text-align: left;
+}
+#time-of-arrival, /* Target the specific time-of-arrival td */
+td[id^="time-of-arrival"] { /* Target any td with an id starting with time-of-arrival */
+    text-align: right;
+}
+#response-suggestions {
+    text-align: left;
+    padding-top: 10px;
+}
+#responder-comments {
+    text-align: justify;
+    padding-top: 10px;
+}
+/* Style for the fire level value (making it bold) */
+#fire-level .fire-level-value {
+    font-weight: bold;
+}
+
+/* Style for the status value (uppercase, bold, green color) */
+#status .status-value {
+    font-weight: bold;
+    text-transform: uppercase;
+    color: green;
+}

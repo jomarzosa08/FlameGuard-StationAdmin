@@ -295,6 +295,9 @@ table {
 td[id^="time-of-arrival"] { /* Target any td with an id starting with time-of-arrival */
     text-align: right;
 }
+td[id^="eta"] {
+    text-align: center; /* Align text to the right */
+}
 #response-suggestions {
     text-align: left;
     padding-top: 10px;

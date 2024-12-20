@@ -48,22 +48,58 @@ const Reports = () => {
                 const respondersRef = collection(firestore, 'responders');
                 const snapshot = await getDocs(respondersRef);
 
-                // Filter responders based on assignedResponder UIDs and map their names
-                const assignedNames = snapshot.docs
-                    .filter((doc) => report.assignedResponder.includes(doc.id))
-                    .map((doc) => doc.data().respondents_Name || 'N/A')
-                    .reverse(); // Reverse to display most recent first
+                const assignedData = await Promise.all(
+                    snapshot.docs
+                        .filter((doc) => report.assignedResponder.includes(doc.id))
+                        .map(async (doc) => {
+                            const data = doc.data();
+                            const responderName = data.respondents_Name || 'N/A';
 
-                // Set responderNames as an array for rendering individual rows
-                setResponderNames(assignedNames.length ? assignedNames : ['No responders assigned']);
+                            // Calculate ETA
+                            const eta = await getETA(
+                                { lat: data.respondents_latitude, lng: data.respondents_longitude },
+                                { lat: report.latitude, lng: report.longitude }
+                            );
+
+                            return { name: responderName, eta: eta || 'N/A' };
+                        })
+                );
+
+                setResponderNames(assignedData.length ? assignedData : [{ name: 'No responders assigned', eta: 'N/A' }]);
             } else {
-                setResponderNames(['No responders assigned']);
+                setResponderNames([{ name: 'No responders assigned', eta: 'N/A' }]);
             }
         } catch (error) {
             console.error('Error fetching responder names:', error);
-            setResponderNames(['Error fetching responders']);
+            setResponderNames([{ name: 'Error fetching responders', eta: 'N/A' }]);
         }
     };
+
+    const getETA = async (origin, destination) => {
+        try {
+            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ'; // Replace with your API key
+            const response = await fetch(
+                `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${apiKey}`
+            );
+            const data = await response.json();
+
+            if (
+                data.rows &&
+                data.rows.length > 0 &&
+                data.rows[0].elements &&
+                data.rows[0].elements.length > 0 &&
+                data.rows[0].elements[0].duration
+            ) {
+                return data.rows[0].elements[0].duration.text; // ETA in text (e.g., "15 mins")
+            } else {
+                return 'Unavailable';
+            }
+        } catch (error) {
+            console.error('Error fetching ETA:', error);
+            return 'Error';
+        }
+    };
+
 
     const fetchIncidentAddress = async (latitude, longitude) => {
         try {
@@ -190,8 +226,9 @@ const Reports = () => {
                                     {responderNames.map((name, index) => (
                                         <tr key={index}>
                                             <td id={`responder-${index}`}>
-                                                <strong>Responder Name:</strong> {name}
+                                                <strong>Responder Name:</strong> {responder.name}
                                             </td>
+                                            <td id={`eta-${index}`}><strong>ETA:</strong> {responder.eta}</td>
                                             <td id={`time-of-arrival-${index}`}><strong>Time of Arrival:</strong> N/A</td>
                                         </tr>
                                     ))}

@@ -54,6 +54,7 @@ const Reports = () => {
                         .map(async (doc) => {
                             const data = doc.data();
                             const responderName = data.respondents_Name || 'N/A';
+                            const timeOfArrival = data.TOA || 'N/A';
 
                             // Calculate ETA
                             const eta = await getETA(
@@ -61,17 +62,23 @@ const Reports = () => {
                                 { lat: report.latitude, lng: report.longitude }
                             );
 
-                            return { name: responderName, eta: eta || 'N/A' };
+                            return {
+                                name: responderName,
+                                eta: eta || 'N/A',
+                                timeOfArrival,
+                            };
                         })
                 );
 
-                setResponderNames(assignedData.length ? assignedData : [{ name: 'No responders assigned', eta: 'N/A' }]);
+                setResponderNames(
+                    assignedData.length ? assignedData : [{ name: 'No responders assigned', eta: 'N/A', timeOfArrival: 'N/A' }]
+                );
             } else {
-                setResponderNames([{ name: 'No responders assigned', eta: 'N/A' }]);
+                setResponderNames([{ name: 'No responders assigned', eta: 'N/A', timeOfArrival: 'N/A' }]);
             }
         } catch (error) {
             console.error('Error fetching responder names:', error);
-            setResponderNames([{ name: 'Error fetching responders', eta: 'N/A' }]);
+            setResponderNames([{ name: 'Error fetching responders', eta: 'N/A', timeOfArrival: 'N/A' }]);
         }
     };
 
@@ -100,7 +107,6 @@ const Reports = () => {
         }
     };
 
-
     const fetchIncidentAddress = async (latitude, longitude) => {
         try {
             const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
@@ -122,7 +128,7 @@ const Reports = () => {
     const handleUpdateFireLevel = async () => {
         if (selectedFireLevel) {
             try {
-                // Update the fire level in the `reportDetails` collection
+                // Update the fire level in the reportDetails collection
                 const reportRef = doc(firestore, 'reportDetails', report.id); // Correct collection and document ID
                 await updateDoc(reportRef, { fireLevel: selectedFireLevel }); // Update the fireLevel field
                 setFireLevel(selectedFireLevel); // Update the local state
@@ -135,8 +141,6 @@ const Reports = () => {
             alert('Please select a valid fire level.');
         }
     };
-
-
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => {
@@ -223,13 +227,13 @@ const Reports = () => {
                             <h2>ACTION RESPONSE</h2>
                             <table className="details-table">
                                 <tbody>
-                                    {responderNames.map((name, index) => (
+                                    {responderNames.map((responder, index) => (
                                         <tr key={index}>
                                             <td id={`responder-${index}`}>
                                                 <strong>Responder Name:</strong> {responder.name}
                                             </td>
                                             <td id={`eta-${index}`}><strong>ETA:</strong> {responder.eta}</td>
-                                            <td id={`time-of-arrival-${index}`}><strong>Time of Arrival:</strong> N/A</td>
+                                            <td id={`time-of-arrival-${index}`}><strong>Time of Arrival:</strong> {responder.timeOfArrival}</td>
                                         </tr>
                                     ))}
                                     <tr>
@@ -243,7 +247,6 @@ const Reports = () => {
                                     </tr>
                                 </tbody>
                             </table>
-
 
                             <h2>FIRE LEVEL CALCULATION</h2>
                             <table>

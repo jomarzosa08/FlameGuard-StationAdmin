@@ -7,6 +7,11 @@
     background: linear-gradient(to bottom, #1b1b1b, #2e2e2e);
 }
 
+h3 {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7), -2px -2px 4px rgba(0, 0, 0, 0.7);
+}
+
 /* Add fire effects */
 .dashboard-container.fire-theme {
     background: radial-gradient(circle at center, #ff4500, #1b1b1b 80%);
@@ -41,19 +46,10 @@
     width: 100%;
 }
 
-.content {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-}
-
 .header-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    align-items: center; /* Vertically align header and sort container */
+    justify-content: space-between; /* Ensure proper spacing between elements */
     margin-bottom: 20px;
 }
 
@@ -85,13 +81,20 @@
     box-shadow: 0 12px 24px rgba(255, 69, 0, 1);
 }
 
+/* Image and Map Layout */
+.report-image-map {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+
 .report-image {
-    width: 100%;
+    flex: 1;
     background-color: #1a1a1a;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; /* To prevent overflow if the image is larger than the container */
+    overflow: hidden; /* Prevent overflow if the image is larger than the container */
 }
 
 .report-image img {
@@ -100,6 +103,18 @@
     border-bottom: 1px solid rgba(255, 69, 0, 0.5);
 }
 
+.report-map {
+    flex: 1;
+    background: #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(255, 69, 0, 0.5);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Report Content */
 .report-content {
     padding: 20px;
     display: flex;
@@ -122,19 +137,20 @@
 .report-details-horizontal {
     display: flex; /* Align children horizontally */
     justify-content: space-between; /* Add spacing between items */
-    align-items: left; /* Vertically align items */
-    gap: 1rem; /* Adds spacing between flex items */
+    align-items: flex-start; /* Align items at the start */
+    gap: 1rem;
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}   
+}
 
 .report-details-item {
-    text-align: left; /* Center-align content */
-    min-width: 120px; /* Prevent shrinking */
+    text-align: left;
+    min-width: 120px;
     font-size: 15px;
 }
 
+/* Button Enhancements */
 .button-container {
     display: flex;
     justify-content: space-between;
@@ -142,7 +158,6 @@
     margin-top: 20px;
 }
 
-/* Buttons */
 .button-container button {
     flex: 1;
     padding: 15px 20px;
@@ -156,7 +171,7 @@
 }
 
 .button-container button:hover {
-    transform: scale(1.1);
+    transform: scale(1);
     background: linear-gradient(to right, #ff7043, #ff4500);
 }
 
@@ -169,16 +184,70 @@
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
-    max-width: 200px; /* Set a maximum width */
-    text-overflow: ellipsis; /* Handle overflow gracefully */
-    white-space: nowrap; /* Prevent the text from wrapping */
-    overflow: hidden; /* Ensure the button does not grow too large */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 60px;
 }
 
 .sort-button:hover {
     background: linear-gradient(to right, #b71c1c, #7f0000);
 }
 
+.sort-container {
+    display: flex;
+    align-items: center; /* Vertically align with the header */
+    gap: 10px; /* Spacing between the dropdown and button */
+    margin-left: auto; /* Push the sort container to the far right */
+}
+
+
+.sort-dropdown {
+    background: linear-gradient(to right, #d32f2f, #b71c1c);
+    color: #fff; /* Text color for dropdown */
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    transition: background-color 0.3s, transform 0.3s;
+    max-width: 200px;
+    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.sort-dropdown:hover {
+    background: linear-gradient(to right, #b71c1c, #7f0000);
+    transform: scale(1.05); /* Slightly enlarges the dropdown on hover */
+}
+
+.sort-dropdown:focus {
+    box-shadow: 0 0 6px rgba(255, 69, 0, 0.8);
+    border: 1px solid rgba(255, 69, 0, 0.8);
+}
+
+/* Fix text color for options */
+.sort-dropdown option {
+    background: #2e2e2e; /* Dark background for options */
+    color: #fff; /* White text color for options */
+    padding: 8px;
+    border: none;
+    outline: none;
+}
+
+/* Optional: Add hover effect for options */
+.sort-dropdown option:hover {
+    background: rgba(255, 69, 0, 0.8);
+    color: #000; /* Black text for better contrast */
+}
+
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .main-content {
         margin-left: 0;
@@ -187,5 +256,9 @@
 
     .content {
         padding: 10px;
+    }
+
+    .report-image-map {
+        flex-direction: column;
     }
 }

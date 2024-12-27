@@ -15,10 +15,26 @@ const normalize = (value, min, max) => {
 const Dashboard = () => {
     const [reports, setReports] = useState([]);
     const [sortedReports, setSortedReports] = useState([]);
+    const [allReports, setAllReports] = useState([]);
     const [isDescending, setIsDescending] = useState(true); // Default to descending
     const [lastOpenedReport, setLastOpenedReport] = useState(null);
     const [model, setModel] = useState(null); // Store the TensorFlow model
+    const [allReportsSortOption, setAllReportsSortOption] = useState('all'); // 'all', 'fireOut', 'ongoing'
+    const [isAllReportsDescending, setIsAllReportsDescending] = useState(false);
     const navigate = useNavigate();
+    
+    // Sorting logic
+    const sortedAllReports = allReports
+    .filter((report) => {
+        if (allReportsSortOption === 'fireOut') return report.status === 'fire out';
+        if (allReportsSortOption === 'ongoing') return report.status === 'on going';
+        return true; // Show all reports
+    })
+    .sort((a, b) => {
+        if (isAllReportsDescending) return b.timeOfReport - a.timeOfReport;
+        return a.timeOfReport - b.timeOfReport;
+    });
+
 
     // Load TensorFlow.js model
     useEffect(() => {
@@ -46,13 +62,13 @@ const Dashboard = () => {
                     timeOfReport: doc.data().timeOfReport?.toDate(),
                 }));
 
-                // Get today's date for filtering
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Set time to the start of today
-                const endOfDay = new Date(today);
-                endOfDay.setHours(23, 59, 59, 999); // Set time to the end of today
+                today.setHours(0, 0, 0, 0);
 
-                // Filter reports to only include today's reports with "on going" status
+                const endOfDay = new Date(today);
+                endOfDay.setHours(23, 59, 59, 999);
+
+                // Filter and sort reports
                 const todayReports = reportsData.filter(
                     (report) =>
                         report.status === 'on going' &&
@@ -69,9 +85,16 @@ const Dashboard = () => {
                     ...report,
                     number: index + 1,
                 }));
-                
+
+                const allReportsSorted = reportsData
+                    .sort((a, b) => (b.timeOfReport || new Date(0)) - (a.timeOfReport || new Date(0)))
+                    .map((report, index) => ({
+                        ...report,
+                        number: index + 1,
+                    }));
 
                 setReports(numberedReports);
+                setAllReports(allReportsSorted);
             } catch (error) {
                 console.error('Error fetching reports:', error);
             }
@@ -193,6 +216,66 @@ const Dashboard = () => {
         setSortedReports(sorted);
     }, [reports, isDescending]);
 
+    useEffect(() => {
+        const fetchAddressesForReports = async () => {
+            const updatedReports = await Promise.all(
+                reports.map(async (report) => {
+                    if (report.latitude && report.longitude) {
+                        try {
+                            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
+                            const response = await fetch(
+                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${report.latitude},${report.longitude}&key=${apiKey}`
+                            );
+                            const data = await response.json();
+                            const address =
+                                data.results && data.results.length > 0
+                                    ? data.results[0].formatted_address
+                                    : 'Address not found';
+                            return { ...report, address };
+                        } catch (error) {
+                            console.error('Error fetching address for report:', report.id, error);
+                            return { ...report, address: 'Unable to fetch address' };
+                        }
+                    } else {
+                        return { ...report, address: 'Coordinates not available' };
+                    }
+                })
+            );
+    
+            const updatedAllReports = await Promise.all(
+                allReports.map(async (report) => {
+                    if (report.latitude && report.longitude) {
+                        try {
+                            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
+                            const response = await fetch(
+                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${report.latitude},${report.longitude}&key=${apiKey}`
+                            );
+                            const data = await response.json();
+                            const address =
+                                data.results && data.results.length > 0
+                                    ? data.results[0].formatted_address
+                                    : 'Address not found';
+                            return { ...report, address };
+                        } catch (error) {
+                            console.error('Error fetching address for report:', report.id, error);
+                            return { ...report, address: 'Unable to fetch address' };
+                        }
+                    } else {
+                        return { ...report, address: 'Coordinates not available' };
+                    }
+                })
+            );
+    
+            setReports(updatedReports);
+            setAllReports(updatedAllReports);
+        };
+    
+        if (reports.length > 0 || allReports.length > 0) {
+            fetchAddressesForReports();
+        }
+    }, [reports, allReports]);
+    
+
     return (
         <div className="dashboard-container fire-theme">
             <Sidebar onViewReportClick={handleViewReportFromSidebar} />
@@ -201,13 +284,13 @@ const Dashboard = () => {
                 <div className="content">
                     <div className="card">
                         <div className="header-row">
-                            <h2>🔥 Incoming Reports</h2>
+                            <h3>🔥 Incoming Reports</h3>
                             <button
                                 onClick={toggleSortOrder}
                                 className="sort-button"
                                 aria-label={`Toggle sort order to ${isDescending ? 'ascending' : 'descending'}`}
                             >
-                                {isDescending ? 'Sort Ascending 🔺' : 'Sort Descending 🔻'}
+                                {isDescending ? '⬆️' : '⬇️'}
                             </button>
                         </div>
                         {sortedReports.length > 0 ? (
@@ -217,11 +300,14 @@ const Dashboard = () => {
                                         <div className="report-content">
                                             <h3>Report #{report.number}</h3>
                                             <div className="report-details-horizontal">
-                                                <div className="report-details-item">
-                                                    <p><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</p>
+                                            <div className="report-details-item">
+                                                    <h3><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</h3>
                                                 </div>
+                                            </div>
+                                            <div className="report-details-horizontal">
+                                                
                                                 <div className="report-details-item">
-                                                    <p><strong>Location:</strong> {`${report.latitude}, ${report.longitude}`}</p>
+                                                    <p><strong>Location:</strong> {report.address || 'Fetching address...'}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>
@@ -238,8 +324,10 @@ const Dashboard = () => {
                                                     <p><strong>Fire Level:</strong> {report.fireLevel || 'Not Predicted'}</p>
                                                 </div>
                                             </div>
-                                            <div className="report-details-item">
-                                                <p><strong>Description:</strong> {report.description || 'No description available'}</p>
+                                            <div className="report-details-horizontal">
+                                                <div className="report-details-item">
+                                                    <p><strong>Response Suggestion:</strong> {report.description || 'No description available'}</p>
+                                                </div>
                                             </div>
                                             <div className="report-image">
                                                 <img
@@ -271,11 +359,97 @@ const Dashboard = () => {
                             <p>No reports found.</p>
                         )}
                     </div>
+
+                    <div className="card">
+                        <div className="header-row">
+                                <h3>📋 All Reports</h3>
+
+                                <button
+                                    onClick={() => setIsAllReportsDescending((prev) => !prev)}
+                                    className="sort-button"
+                                    aria-label={`Toggle sort order to ${isAllReportsDescending ? 'ascending' : 'descending'}`}
+                                >
+                                    {isAllReportsDescending ? '⬆️' : '⬇️'}
+                                </button>
+                            </div>
+
+                            <select
+                                    className="sort-dropdown"
+                                    value={allReportsSortOption}
+                                    onChange={(e) => setAllReportsSortOption(e.target.value)}
+                                >
+                                    <option value="all">All Reports</option>
+                                    <option value="fireOut">Fire Out</option>
+                                    <option value="ongoing">On Going</option>
+                                </select>
+
+                                <br /><br />
+                        
+                        {sortedAllReports.length > 0 ? (
+                            <div className="report-grid">
+                                {sortedAllReports.map((report) => (
+                                    <div key={report.id} className="report-card">
+                                        <div className="report-content">
+                                            <div className="report-details-horizontal">
+                                                <div className="report-details-item">
+                                                    <h3><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</h3>
+                                                </div>
+                                            </div>
+                                            <div className="report-details-horizontal">
+                                                <div className="report-details-item">
+                                                    <p><strong>Location:</strong> {report.address || 'Fetching address...'}</p>
+                                                </div>
+                                                <div className="report-details-item">
+                                                    <p>
+                                                        <strong>Time:</strong>{' '}
+                                                        {report.timeOfReport
+                                                            ? report.timeOfReport.toLocaleString([], {
+                                                                dateStyle: 'short',
+                                                                timeStyle: 'short',
+                                                            })
+                                                            : 'Unknown Time'}
+                                                    </p>
+                                                </div>
+                                                <div className="report-details-item">
+                                                    <p><strong>Fire Level:</strong> {report.fireLevel || 'Not Predicted'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="report-details-horizontal">
+                                                <div className="report-details-item">
+                                                    <p><strong>Response Suggestion:</strong> {report.description || 'No description available'}</p>
+                                                </div>
+                                                <div className="report-details-item">
+                                                    <p><strong>Status:</strong> {report.status || 'N/A'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="report-image">
+                                                <img
+                                                    src={
+                                                        report.image && report.image.startsWith('http')
+                                                            ? report.image
+                                                            : 'https://i.cdn.turner.com/cnn/2010/WORLD/asiapcf/04/25/philippines.fire/t1larg.afp.gi.jpg'
+                                                    }
+                                                    alt={`Report ${report.number}`}
+                                                    className="report-image-img"
+                                                />
+                                            </div>
+                                            <div className="button-container">
+                                                <button onClick={() => handleViewDetails(report)} aria-label="View Details">
+                                                    View Details 🔍
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p>No reports found.</p>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
     );
-    
 };
 
 export default Dashboard;

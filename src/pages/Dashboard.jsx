@@ -119,15 +119,15 @@ const Dashboard = () => {
     // Function to determine fire level and append response to description
     const getFireLevelInfo = (fireSpreadRate) => {
         if (fireSpreadRate >= 0 && fireSpreadRate < 14) {
-            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+            return { level: "1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
         } else if (fireSpreadRate >= 14 && fireSpreadRate <= 16) {
-            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+            return { level: "1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
         } else if (fireSpreadRate > 16 && fireSpreadRate <= 21) {
-            return { level: "Level 2", response: "2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+            return { level: "1", response: "2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
         } else if (fireSpreadRate > 21 && fireSpreadRate <= 30) {
-            return { level: "Level 2", response: "2-4 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
+            return { level: "1", response: "2-4 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
         } else if (fireSpreadRate > 30) {
-            return { level: "Level 3", response: "4-5 fire trucks from nearby fire stations in Cebu City, potential level 3 in 15 mins" };
+            return { level: "1", response: "4-5 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
         } else {
             return { level: "No Fire Level", response: "Normal conditions, no specific response required" };
         }

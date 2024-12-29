@@ -12,7 +12,6 @@ const Reports = () => {
 
     const [callerInfo, setCallerInfo] = useState({ address: 'N/A', contactNo: 'N/A' });
     const [responderNames, setResponderNames] = useState(['No responders assigned']);
-    const [incidentAddress, setIncidentAddress] = useState('Fetching address...');
     const [fireLevel, setFireLevel] = useState(report?.fireLevel || 'N/A');
     const [selectedFireLevel, setSelectedFireLevel] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,7 +20,6 @@ const Reports = () => {
         if (report) {
             fetchCallerDetails();
             fetchResponderNames();
-            fetchIncidentAddress(report.latitude, report.longitude);
         }
     }, [report]);
 
@@ -48,27 +46,16 @@ const Reports = () => {
                 const respondersRef = collection(firestore, 'responders');
                 const snapshot = await getDocs(respondersRef);
 
-                const assignedData = await Promise.all(
-                    snapshot.docs
-                        .filter((doc) => report.assignedResponder.includes(doc.id))
-                        .map(async (doc) => {
-                            const data = doc.data();
-                            const responderName = data.respondents_Name || 'N/A';
-                            const timeOfArrival = data.TOA || 'N/A';
-
-                            // Calculate ETA
-                            const eta = await getETA(
-                                { lat: data.respondents_latitude, lng: data.respondents_longitude },
-                                { lat: report.latitude, lng: report.longitude }
-                            );
-
-                            return {
-                                name: responderName,
-                                eta: eta || 'N/A',
-                                timeOfArrival,
-                            };
-                        })
-                );
+                const assignedData = snapshot.docs
+                    .filter((doc) => report.assignedResponder.includes(doc.id))
+                    .map((doc) => {
+                        const data = doc.data();
+                        return {
+                            name: data.respondents_Name || 'N/A',
+                            timeOfArrival: data.TOA || 'N/A',
+                            eta: 'Unavailable', // Removed ETA calculation
+                        };
+                    });
 
                 setResponderNames(
                     assignedData.length ? assignedData : [{ name: 'No responders assigned', eta: 'N/A', timeOfArrival: 'N/A' }]
@@ -79,49 +66,6 @@ const Reports = () => {
         } catch (error) {
             console.error('Error fetching responder names:', error);
             setResponderNames([{ name: 'Error fetching responders', eta: 'N/A', timeOfArrival: 'N/A' }]);
-        }
-    };
-
-    const getETA = async (origin, destination) => {
-        try {
-            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ'; // Replace with your API key
-            const response = await fetch(
-                `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${apiKey}`
-            );
-            const data = await response.json();
-
-            if (
-                data.rows &&
-                data.rows.length > 0 &&
-                data.rows[0].elements &&
-                data.rows[0].elements.length > 0 &&
-                data.rows[0].elements[0].duration
-            ) {
-                return data.rows[0].elements[0].duration.text; // ETA in text (e.g., "15 mins")
-            } else {
-                return 'Unavailable';
-            }
-        } catch (error) {
-            console.error('Error fetching ETA:', error);
-            return 'Error';
-        }
-    };
-
-    const fetchIncidentAddress = async (latitude, longitude) => {
-        try {
-            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
-            const response = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
-            );
-            const data = await response.json();
-            if (data.results && data.results.length > 0) {
-                setIncidentAddress(data.results[0].formatted_address);
-            } else {
-                setIncidentAddress('Address not found');
-            }
-        } catch (error) {
-            console.error('Error fetching incident address:', error);
-            setIncidentAddress('Unable to fetch address');
         }
     };
 
@@ -219,7 +163,7 @@ const Reports = () => {
                                 <tbody>
                                     <tr>
                                         <td id="incident-datetime"><strong>Date and Time of Incident:</strong> {dateTimeOfIncident}</td>
-                                        <td id="incident-location"><strong>Location:</strong> {incidentAddress}</td>
+                                        <td id="incident-location"><strong>Location:</strong> Latitude: {report.latitude}, Longitude: {report.longitude}</td>
                                     </tr>
                                 </tbody>
                             </table>

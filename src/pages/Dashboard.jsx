@@ -216,65 +216,7 @@ const Dashboard = () => {
         setSortedReports(sorted);
     }, [reports, isDescending]);
 
-    useEffect(() => {
-        const fetchAddressesForReports = async () => {
-            const updatedReports = await Promise.all(
-                reports.map(async (report) => {
-                    if (report.latitude && report.longitude) {
-                        try {
-                            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
-                            const response = await fetch(
-                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${report.latitude},${report.longitude}&key=${apiKey}`
-                            );
-                            const data = await response.json();
-                            const address =
-                                data.results && data.results.length > 0
-                                    ? data.results[0].formatted_address
-                                    : 'Address not found';
-                            return { ...report, address };
-                        } catch (error) {
-                            console.error('Error fetching address for report:', report.id, error);
-                            return { ...report, address: 'Unable to fetch address' };
-                        }
-                    } else {
-                        return { ...report, address: 'Coordinates not available' };
-                    }
-                })
-            );
-    
-            const updatedAllReports = await Promise.all(
-                allReports.map(async (report) => {
-                    if (report.latitude && report.longitude) {
-                        try {
-                            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
-                            const response = await fetch(
-                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${report.latitude},${report.longitude}&key=${apiKey}`
-                            );
-                            const data = await response.json();
-                            const address =
-                                data.results && data.results.length > 0
-                                    ? data.results[0].formatted_address
-                                    : 'Address not found';
-                            return { ...report, address };
-                        } catch (error) {
-                            console.error('Error fetching address for report:', report.id, error);
-                            return { ...report, address: 'Unable to fetch address' };
-                        }
-                    } else {
-                        return { ...report, address: 'Coordinates not available' };
-                    }
-                })
-            );
-    
-            setReports(updatedReports);
-            setAllReports(updatedAllReports);
-        };
-    
-        if (reports.length > 0 || allReports.length > 0) {
-            fetchAddressesForReports();
-        }
-    }, [reports, allReports]);
-    
+
 
     return (
         <div className="dashboard-container fire-theme">
@@ -307,7 +249,7 @@ const Dashboard = () => {
                                             <div className="report-details-horizontal">
                                                 
                                                 <div className="report-details-item">
-                                                    <p><strong>Location:</strong> {report.address || 'Fetching address...'}</p>
+                                                <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>
@@ -397,7 +339,7 @@ const Dashboard = () => {
                                             </div>
                                             <div className="report-details-horizontal">
                                                 <div className="report-details-item">
-                                                    <p><strong>Location:</strong> {report.address || 'Fetching address...'}</p>
+                                                <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>

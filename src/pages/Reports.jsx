@@ -12,7 +12,6 @@ const Reports = () => {
 
     const [callerInfo, setCallerInfo] = useState({ address: 'N/A', contactNo: 'N/A' });
     const [responderNames, setResponderNames] = useState(['No responders assigned']);
-    const [incidentAddress, setIncidentAddress] = useState('Fetching address...');
     const [fireLevel, setFireLevel] = useState(report?.fireLevel || 'N/A');
     const [selectedFireLevel, setSelectedFireLevel] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,23 +106,7 @@ const Reports = () => {
         }
     };
 
-    const fetchIncidentAddress = async (latitude, longitude) => {
-        try {
-            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
-            const response = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
-            );
-            const data = await response.json();
-            if (data.results && data.results.length > 0) {
-                setIncidentAddress(data.results[0].formatted_address);
-            } else {
-                setIncidentAddress('Address not found');
-            }
-        } catch (error) {
-            console.error('Error fetching incident address:', error);
-            setIncidentAddress('Unable to fetch address');
-        }
-    };
+
 
     const handleUpdateFireLevel = async () => {
         if (selectedFireLevel) {
@@ -219,7 +202,7 @@ const Reports = () => {
                                 <tbody>
                                     <tr>
                                         <td id="incident-datetime"><strong>Date and Time of Incident:</strong> {dateTimeOfIncident}</td>
-                                        <td id="incident-location"><strong>Location:</strong> {incidentAddress}</td>
+                                        <td id="incident-location"><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</td>
                                     </tr>
                                 </tbody>
                             </table>

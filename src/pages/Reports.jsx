@@ -15,12 +15,15 @@ const Reports = () => {
     const [fireLevel, setFireLevel] = useState(report?.fireLevel || 'N/A');
     const [selectedFireLevel, setSelectedFireLevel] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [incidentAddress, setIncidentAddress] = useState('Fetching address...');
+
+    const MAPTILER_API_KEY = 'YaB4iP4jFDNdXfQfiNVT';
 
     useEffect(() => {
         if (report) {
             fetchCallerDetails();
             fetchResponderNames();
-            fetchIncidentAddress(report.latitude, report.longitude);
+            fetchIncidentAddress();
         }
     }, [report]);
 
@@ -44,6 +47,7 @@ const Reports = () => {
     const fetchResponderNames = async () => {
         try {
             if (report?.assignedResponder?.length > 0) {
+                console.log('Assigned Responder IDs:', report.assignedResponder);
                 const respondersRef = collection(firestore, 'responders');
                 const snapshot = await getDocs(respondersRef);
 
@@ -52,27 +56,54 @@ const Reports = () => {
                         .filter((doc) => report.assignedResponder.includes(doc.id))
                         .map(async (doc) => {
                             const data = doc.data();
-                            const responderName = data.respondents_Name || 'N/A';
-                            const timeOfArrival = data.TOA || 'N/A';
+                            const responderLat = data.respondents_latitude;
+                            const responderLng = data.respondents_longitude;
+                            const incidentLat = report.latitude;
+                            const incidentLng = report.longitude;
 
-                            // Calculate ETA
-                            const eta = await getETA(
-                                { lat: data.respondents_latitude, lng: data.respondents_longitude },
-                                { lat: report.latitude, lng: report.longitude }
-                            );
+                            console.log(`Responder (${doc.id}) Coordinates:`, { responderLat, responderLng });
+                            console.log(`Incident Coordinates:`, { incidentLat, incidentLng });
+
+                            let eta = 'Unavailable';
+
+                            if (responderLat && responderLng && incidentLat && incidentLng) {
+                                try {
+                                    const apiUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf6248a7592687ef4a44dabc957206e871c21e&start=${responderLng},${responderLat}&end=${incidentLng},${incidentLat}`;
+                                    console.log('API Request URL:', apiUrl);
+
+                                    const response = await fetch(apiUrl);
+                                    const directionsData = await response.json();
+
+                                    console.log('Full API Response:', directionsData); // Log full response
+
+                                    if (directionsData?.features?.length > 0) {
+                                        const duration = directionsData.features[0].properties.segments[0].duration; // Duration in seconds
+                                        console.log('Travel Time (seconds):', duration);
+                                        if (duration) {
+                                            eta = `${Math.round(duration / 60)} mins`; // Convert to minutes
+                                        }
+                                    } else {
+                                        console.warn('No routes available in API response.');
+                                    }
+                                } catch (apiError) {
+                                    console.error('Error fetching directions:', apiError);
+                                }
+                            }
 
                             return {
-                                name: responderName,
-                                eta: eta || 'N/A',
-                                timeOfArrival,
+                                name: data.respondents_Name || 'N/A',
+                                timeOfArrival: data.TOA || 'N/A',
+                                eta,
                             };
                         })
                 );
 
+                console.log('Responder Data:', assignedData);
                 setResponderNames(
                     assignedData.length ? assignedData : [{ name: 'No responders assigned', eta: 'N/A', timeOfArrival: 'N/A' }]
                 );
             } else {
+                console.log('No responders assigned.');
                 setResponderNames([{ name: 'No responders assigned', eta: 'N/A', timeOfArrival: 'N/A' }]);
             }
         } catch (error) {
@@ -81,44 +112,40 @@ const Reports = () => {
         }
     };
 
-    const getETA = async (origin, destination) => {
-        try {
-            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ'; // Replace with your API key
-            const response = await fetch(
-                `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${apiKey}`
-            );
-            const data = await response.json();
 
-            if (
-                data.rows &&
-                data.rows.length > 0 &&
-                data.rows[0].elements &&
-                data.rows[0].elements.length > 0 &&
-                data.rows[0].elements[0].duration
-            ) {
-                return data.rows[0].elements[0].duration.text; // ETA in text (e.g., "15 mins")
+
+    const fetchIncidentAddress = async () => {
+        try {
+            const { latitude, longitude } = report;
+            if (latitude && longitude) {
+                const response = await fetch(
+                    `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${MAPTILER_API_KEY}`
+                );
+                const data = await response.json();
+                if (data?.features?.length) {
+                    setIncidentAddress(data.features[0].place_name || 'Address not found');
+                } else {
+                    setIncidentAddress('Address not found');
+                }
             } else {
-                return 'Unavailable';
+                setIncidentAddress('Coordinates unavailable');
             }
         } catch (error) {
-            console.error('Error fetching ETA:', error);
-            return 'Error';
+            console.error('Error fetching incident address:', error);
+            setIncidentAddress('Failed to fetch address');
         }
     };
-
-
 
     const handleUpdateFireLevel = async () => {
         if (selectedFireLevel) {
             try {
-                // Update the fire level in the reportDetails collection
-                const reportRef = doc(firestore, 'reportDetails', report.id); // Correct collection and document ID
-                await updateDoc(reportRef, { fireLevel: selectedFireLevel }); // Update the fireLevel field
-                setFireLevel(selectedFireLevel); // Update the local state
-                closeModal(); // Close modal immediately after success
+                const reportRef = doc(firestore, 'reportDetails', report.id);
+                await updateDoc(reportRef, { fireLevel: selectedFireLevel });
+                setFireLevel(selectedFireLevel);
+                closeModal();
             } catch (error) {
                 console.error('Error updating fire level:', error);
-                alert('Failed to update fire level. Try again.'); // Keep alert only for errors
+                alert('Failed to update fire level. Try again.');
             }
         } else {
             alert('Please select a valid fire level.');
@@ -133,7 +160,7 @@ const Reports = () => {
 
     if (!report) return <p>No report details available.</p>;
 
-    const dateTimeOfIncident = new Date(report.timeOfReport).toLocaleString(); // Combine date and time
+    const dateTimeOfIncident = new Date(report.timeOfReport).toLocaleString();
 
     return (
         <div className="dashboard-container">
@@ -197,12 +224,13 @@ const Reports = () => {
                                     </tr>
                                 </tbody>
                             </table>
+
                             <h2>THE INCIDENT</h2>
                             <table>
                                 <tbody>
                                     <tr>
                                         <td id="incident-datetime"><strong>Date and Time of Incident:</strong> {dateTimeOfIncident}</td>
-                                        <td id="incident-location"><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</td>
+                                        <td id="incident-location"><strong>Location:</strong> {incidentAddress}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -220,10 +248,10 @@ const Reports = () => {
                                         </tr>
                                     ))}
                                     <tr>
-                                        <td id="response-suggestions" colSpan="2"><strong>Response Suggestions:</strong> {report.description || 'N/A'}</td>
+                                        <td id="response-suggestions" colSpan="3"><strong>Response Suggestions:</strong> {report.description || 'N/A'}</td>
                                     </tr>
                                     <tr>
-                                        <td id="responder-comments" colSpan="2">
+                                        <td id="responder-comments" colSpan="3">
                                             <strong>Responder's Comments:</strong> <br />
                                             {report.comments || 'No comments available.'}
                                         </td>

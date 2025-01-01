@@ -22,18 +22,18 @@ const Dashboard = () => {
     const [allReportsSortOption, setAllReportsSortOption] = useState('all'); // 'all', 'fireOut', 'ongoing'
     const [isAllReportsDescending, setIsAllReportsDescending] = useState(false);
     const navigate = useNavigate();
-    
+
     // Sorting logic
     const sortedAllReports = allReports
-    .filter((report) => {
-        if (allReportsSortOption === 'fireOut') return report.status === 'fire out';
-        if (allReportsSortOption === 'ongoing') return report.status === 'on going';
-        return true; // Show all reports
-    })
-    .sort((a, b) => {
-        if (isAllReportsDescending) return b.timeOfReport - a.timeOfReport;
-        return a.timeOfReport - b.timeOfReport;
-    });
+        .filter((report) => {
+            if (allReportsSortOption === 'fireOut') return report.status === 'fire out';
+            if (allReportsSortOption === 'ongoing') return report.status === 'on going';
+            return true; // Show all reports
+        })
+        .sort((a, b) => {
+            if (isAllReportsDescending) return b.timeOfReport - a.timeOfReport;
+            return a.timeOfReport - b.timeOfReport;
+        });
 
 
     // Load TensorFlow.js model
@@ -119,15 +119,15 @@ const Dashboard = () => {
     // Function to determine fire level and append response to description
     const getFireLevelInfo = (fireSpreadRate) => {
         if (fireSpreadRate >= 0 && fireSpreadRate < 14) {
-            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+            return { level: "1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
         } else if (fireSpreadRate >= 14 && fireSpreadRate <= 16) {
-            return { level: "Level 1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+            return { level: "1", response: "1-2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
         } else if (fireSpreadRate > 16 && fireSpreadRate <= 21) {
-            return { level: "Level 2", response: "2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
+            return { level: "1", response: "2 fire trucks from nearby fire stations in Cebu City except Talamban and Talisay, escalate to level 2 in 15 mins" };
         } else if (fireSpreadRate > 21 && fireSpreadRate <= 30) {
-            return { level: "Level 2", response: "2-4 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
+            return { level: "1", response: "2-4 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
         } else if (fireSpreadRate > 30) {
-            return { level: "Level 3", response: "4-5 fire trucks from nearby fire stations in Cebu City, potential level 3 in 15 mins" };
+            return { level: "1", response: "4-5 fire trucks from nearby fire stations in Cebu City, potential level 2 in less than 15 mins" };
         } else {
             return { level: "No Fire Level", response: "Normal conditions, no specific response required" };
         }
@@ -242,14 +242,14 @@ const Dashboard = () => {
                                         <div className="report-content">
                                             <h3>Report #{report.number}</h3>
                                             <div className="report-details-horizontal">
-                                            <div className="report-details-item">
+                                                <div className="report-details-item">
                                                     <h3><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</h3>
                                                 </div>
                                             </div>
                                             <div className="report-details-horizontal">
-                                                
+
                                                 <div className="report-details-item">
-                                                <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
+                                                    <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>
@@ -304,29 +304,29 @@ const Dashboard = () => {
 
                     <div className="card">
                         <div className="header-row">
-                                <h3>📋 All Reports</h3>
+                            <h3>📋 All Reports</h3>
 
-                                <button
-                                    onClick={() => setIsAllReportsDescending((prev) => !prev)}
-                                    className="sort-button"
-                                    aria-label={`Toggle sort order to ${isAllReportsDescending ? 'ascending' : 'descending'}`}
-                                >
-                                    {isAllReportsDescending ? '⬆️' : '⬇️'}
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setIsAllReportsDescending((prev) => !prev)}
+                                className="sort-button"
+                                aria-label={`Toggle sort order to ${isAllReportsDescending ? 'ascending' : 'descending'}`}
+                            >
+                                {isAllReportsDescending ? '⬆️' : '⬇️'}
+                            </button>
+                        </div>
 
-                            <select
-                                    className="sort-dropdown"
-                                    value={allReportsSortOption}
-                                    onChange={(e) => setAllReportsSortOption(e.target.value)}
-                                >
-                                    <option value="all">All Reports</option>
-                                    <option value="fireOut">Fire Out</option>
-                                    <option value="ongoing">On Going</option>
-                                </select>
+                        <select
+                            className="sort-dropdown"
+                            value={allReportsSortOption}
+                            onChange={(e) => setAllReportsSortOption(e.target.value)}
+                        >
+                            <option value="all">All Reports</option>
+                            <option value="fireOut">Fire Out</option>
+                            <option value="ongoing">On Going</option>
+                        </select>
 
-                                <br /><br />
-                        
+                        <br /><br />
+
                         {sortedAllReports.length > 0 ? (
                             <div className="report-grid">
                                 {sortedAllReports.map((report) => (
@@ -339,7 +339,7 @@ const Dashboard = () => {
                                             </div>
                                             <div className="report-details-horizontal">
                                                 <div className="report-details-item">
-                                                <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
+                                                    <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>

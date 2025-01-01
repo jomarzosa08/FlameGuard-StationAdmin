@@ -22,18 +22,18 @@ const Dashboard = () => {
     const [allReportsSortOption, setAllReportsSortOption] = useState('all'); // 'all', 'fireOut', 'ongoing'
     const [isAllReportsDescending, setIsAllReportsDescending] = useState(false);
     const navigate = useNavigate();
-    
+
     // Sorting logic
     const sortedAllReports = allReports
-    .filter((report) => {
-        if (allReportsSortOption === 'fireOut') return report.status === 'fire out';
-        if (allReportsSortOption === 'ongoing') return report.status === 'on going';
-        return true; // Show all reports
-    })
-    .sort((a, b) => {
-        if (isAllReportsDescending) return b.timeOfReport - a.timeOfReport;
-        return a.timeOfReport - b.timeOfReport;
-    });
+        .filter((report) => {
+            if (allReportsSortOption === 'fireOut') return report.status === 'fire out';
+            if (allReportsSortOption === 'ongoing') return report.status === 'on going';
+            return true; // Show all reports
+        })
+        .sort((a, b) => {
+            if (isAllReportsDescending) return b.timeOfReport - a.timeOfReport;
+            return a.timeOfReport - b.timeOfReport;
+        });
 
 
     // Load TensorFlow.js model
@@ -216,65 +216,7 @@ const Dashboard = () => {
         setSortedReports(sorted);
     }, [reports, isDescending]);
 
-    useEffect(() => {
-        const fetchAddressesForReports = async () => {
-            const updatedReports = await Promise.all(
-                reports.map(async (report) => {
-                    if (report.latitude && report.longitude) {
-                        try {
-                            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
-                            const response = await fetch(
-                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${report.latitude},${report.longitude}&key=${apiKey}`
-                            );
-                            const data = await response.json();
-                            const address =
-                                data.results && data.results.length > 0
-                                    ? data.results[0].formatted_address
-                                    : 'Address not found';
-                            return { ...report, address };
-                        } catch (error) {
-                            console.error('Error fetching address for report:', report.id, error);
-                            return { ...report, address: 'Unable to fetch address' };
-                        }
-                    } else {
-                        return { ...report, address: 'Coordinates not available' };
-                    }
-                })
-            );
-    
-            const updatedAllReports = await Promise.all(
-                allReports.map(async (report) => {
-                    if (report.latitude && report.longitude) {
-                        try {
-                            const apiKey = 'AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQ';
-                            const response = await fetch(
-                                `https://maps.googleapis.com/maps/api/geocode/json?latlng=${report.latitude},${report.longitude}&key=${apiKey}`
-                            );
-                            const data = await response.json();
-                            const address =
-                                data.results && data.results.length > 0
-                                    ? data.results[0].formatted_address
-                                    : 'Address not found';
-                            return { ...report, address };
-                        } catch (error) {
-                            console.error('Error fetching address for report:', report.id, error);
-                            return { ...report, address: 'Unable to fetch address' };
-                        }
-                    } else {
-                        return { ...report, address: 'Coordinates not available' };
-                    }
-                })
-            );
-    
-            setReports(updatedReports);
-            setAllReports(updatedAllReports);
-        };
-    
-        if (reports.length > 0 || allReports.length > 0) {
-            fetchAddressesForReports();
-        }
-    }, [reports, allReports]);
-    
+
 
     return (
         <div className="dashboard-container fire-theme">
@@ -300,14 +242,14 @@ const Dashboard = () => {
                                         <div className="report-content">
                                             <h3>Report #{report.number}</h3>
                                             <div className="report-details-horizontal">
-                                            <div className="report-details-item">
+                                                <div className="report-details-item">
                                                     <h3><strong>Reported by:</strong> {report.reportedBy || 'Unknown Caller'}</h3>
                                                 </div>
                                             </div>
                                             <div className="report-details-horizontal">
-                                                
+
                                                 <div className="report-details-item">
-                                                    <p><strong>Location:</strong> {report.address || 'Fetching address...'}</p>
+                                                    <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>
@@ -362,29 +304,29 @@ const Dashboard = () => {
 
                     <div className="card">
                         <div className="header-row">
-                                <h3>📋 All Reports</h3>
+                            <h3>📋 All Reports</h3>
 
-                                <button
-                                    onClick={() => setIsAllReportsDescending((prev) => !prev)}
-                                    className="sort-button"
-                                    aria-label={`Toggle sort order to ${isAllReportsDescending ? 'ascending' : 'descending'}`}
-                                >
-                                    {isAllReportsDescending ? '⬆️' : '⬇️'}
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setIsAllReportsDescending((prev) => !prev)}
+                                className="sort-button"
+                                aria-label={`Toggle sort order to ${isAllReportsDescending ? 'ascending' : 'descending'}`}
+                            >
+                                {isAllReportsDescending ? '⬆️' : '⬇️'}
+                            </button>
+                        </div>
 
-                            <select
-                                    className="sort-dropdown"
-                                    value={allReportsSortOption}
-                                    onChange={(e) => setAllReportsSortOption(e.target.value)}
-                                >
-                                    <option value="all">All Reports</option>
-                                    <option value="fireOut">Fire Out</option>
-                                    <option value="ongoing">On Going</option>
-                                </select>
+                        <select
+                            className="sort-dropdown"
+                            value={allReportsSortOption}
+                            onChange={(e) => setAllReportsSortOption(e.target.value)}
+                        >
+                            <option value="all">All Reports</option>
+                            <option value="fireOut">Fire Out</option>
+                            <option value="ongoing">On Going</option>
+                        </select>
 
-                                <br /><br />
-                        
+                        <br /><br />
+
                         {sortedAllReports.length > 0 ? (
                             <div className="report-grid">
                                 {sortedAllReports.map((report) => (
@@ -397,7 +339,7 @@ const Dashboard = () => {
                                             </div>
                                             <div className="report-details-horizontal">
                                                 <div className="report-details-item">
-                                                    <p><strong>Location:</strong> {report.address || 'Fetching address...'}</p>
+                                                    <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>

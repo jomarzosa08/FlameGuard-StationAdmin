@@ -22,6 +22,7 @@ const Dashboard = () => {
     const [allReportsSortOption, setAllReportsSortOption] = useState('all'); // 'all', 'fireOut', 'ongoing'
     const [isAllReportsDescending, setIsAllReportsDescending] = useState(false);
     const navigate = useNavigate();
+    const MAPTILER_API_KEY = 'YaB4iP4jFDNdXfQfiNVT'; 
 
     // Sorting logic
     const sortedAllReports = allReports
@@ -35,6 +36,17 @@ const Dashboard = () => {
             return a.timeOfReport - b.timeOfReport;
         });
 
+    const fetchAddress = async (latitude, longitude) => {
+        const url = `https://api.maptiler.com/geocoding/${longitude},${latitude}.json?key=${MAPTILER_API_KEY}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.features?.[0]?.place_name || 'Address not found';
+        } catch (error) {
+            console.error('Error fetching address:', error);
+            return 'Address not found';
+        }
+    };
 
     // Load TensorFlow.js model
     useEffect(() => {
@@ -61,6 +73,17 @@ const Dashboard = () => {
                     ...doc.data(),
                     timeOfReport: doc.data().timeOfReport?.toDate(),
                 }));
+
+                // Add geocoded address to each report
+                const reportsWithAddresses = await Promise.all(
+                    reportsData.map(async (report) => {
+                        if (report.latitude && report.longitude) {
+                            const address = await fetchAddress(report.latitude, report.longitude);
+                            return { ...report, address };
+                        }
+                        return { ...report, address: 'No coordinates provided' };
+                    })
+                );
 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -94,6 +117,7 @@ const Dashboard = () => {
                     }));
 
                 setReports(numberedReports);
+                setReports(reportsWithAddresses);
                 setAllReports(allReportsSorted);
             } catch (error) {
                 console.error('Error fetching reports:', error);
@@ -249,7 +273,7 @@ const Dashboard = () => {
                                             <div className="report-details-horizontal">
 
                                                 <div className="report-details-item">
-                                                    <p><strong>Coordinates:</strong> Lat: {report.latitude || 'N/A'}, Lng: {report.longitude || 'N/A'}</p>
+                                                    <p><strong>Address:</strong> {report.address}</p>
                                                 </div>
                                                 <div className="report-details-item">
                                                     <p>

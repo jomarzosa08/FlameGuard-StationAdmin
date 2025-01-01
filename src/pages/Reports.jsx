@@ -6,11 +6,6 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import './Reports.css';
 
-const testStart = '123.9083305,10.3138334'; // Example longitude,latitude
-const testEnd = '123.9153097,10.3455782';   // Example longitude,latitude
-const testUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf6248a7592687ef4a44dabc957206e871c21e&start=${testStart}&end=${testEnd}`;
-console.log('Test URL:', testUrl);
-
 const Reports = () => {
     const location = useLocation();
     const { report } = location.state || {}; // Extract report from route state

@@ -47,7 +47,6 @@ const Reports = () => {
     const fetchResponderNames = async () => {
         try {
             if (report?.assignedResponder?.length > 0) {
-                console.log('Assigned Responder IDs:', report.assignedResponder);
                 const respondersRef = collection(firestore, 'responders');
                 const snapshot = await getDocs(respondersRef);
 
@@ -61,29 +60,18 @@ const Reports = () => {
                             const incidentLat = report.latitude;
                             const incidentLng = report.longitude;
 
-                            console.log(`Responder (${doc.id}) Coordinates:`, { responderLat, responderLng });
-                            console.log(`Incident Coordinates:`, { incidentLat, incidentLng });
-
                             let eta = 'Unavailable';
-
                             if (responderLat && responderLng && incidentLat && incidentLng) {
                                 try {
                                     const apiUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf6248a7592687ef4a44dabc957206e871c21e&start=${responderLng},${responderLat}&end=${incidentLng},${incidentLat}`;
-                                    console.log('API Request URL:', apiUrl);
-
                                     const response = await fetch(apiUrl);
                                     const directionsData = await response.json();
 
-                                    console.log('Full API Response:', directionsData); // Log full response
-
                                     if (directionsData?.features?.length > 0) {
                                         const duration = directionsData.features[0].properties.segments[0].duration; // Duration in seconds
-                                        console.log('Travel Time (seconds):', duration);
                                         if (duration) {
                                             eta = `${Math.round(duration / 60)} mins`; // Convert to minutes
                                         }
-                                    } else {
-                                        console.warn('No routes available in API response.');
                                     }
                                 } catch (apiError) {
                                     console.error('Error fetching directions:', apiError);
@@ -92,25 +80,25 @@ const Reports = () => {
 
                             return {
                                 name: data.respondents_Name || 'N/A',
+                                stationChief: data.respondents_StationChief || 'N/A',
                                 timeOfArrival: data.TOA || 'N/A',
                                 eta,
                             };
                         })
                 );
 
-                console.log('Responder Data:', assignedData);
                 setResponderNames(
-                    assignedData.length ? assignedData : [{ name: 'No responders assigned', eta: 'N/A', timeOfArrival: 'N/A' }]
+                    assignedData.length ? assignedData : [{ name: 'No responders assigned', stationChief: 'N/A', eta: 'N/A', timeOfArrival: 'N/A' }]
                 );
             } else {
-                console.log('No responders assigned.');
-                setResponderNames([{ name: 'No responders assigned', eta: 'N/A', timeOfArrival: 'N/A' }]);
+                setResponderNames([{ name: 'No responders assigned', stationChief: 'N/A', eta: 'N/A', timeOfArrival: 'N/A' }]);
             }
         } catch (error) {
             console.error('Error fetching responder names:', error);
-            setResponderNames([{ name: 'Error fetching responders', eta: 'N/A', timeOfArrival: 'N/A' }]);
+            setResponderNames([{ name: 'Error fetching responders', stationChief: 'N/A', eta: 'N/A', timeOfArrival: 'N/A' }]);
         }
     };
+
 
 
 
@@ -239,13 +227,16 @@ const Reports = () => {
                             <table className="details-table">
                                 <tbody>
                                     {responderNames.map((responder, index) => (
-                                        <tr key={index}>
-                                            <td id={`responder-${index}`}>
-                                                <strong>Responder Name:</strong> {responder.name}
-                                            </td>
-                                            <td id={`eta-${index}`}><strong>ETA:</strong> {responder.eta}</td>
-                                            <td id={`time-of-arrival-${index}`}><strong>Time of Arrival:</strong> {responder.timeOfArrival}</td>
-                                        </tr>
+                                        <React.Fragment key={index}>
+                                            <tr>
+                                                <td id={`responder-${index}`}><strong>Responder Name:</strong> {responder.name}</td>
+                                                <td id={`eta-${index}`}><strong>ETA:</strong> {responder.eta}</td>
+                                                <td id={`time-of-arrival-${index}`}><strong>Time of Arrival:</strong> {responder.timeOfArrival}</td>
+                                            </tr>
+                                            <tr className="station-chief-row">
+                                                <td id={`station-chief-${index}`} colSpan="3"><strong>Station Chief:</strong> {responder.stationChief}</td>
+                                            </tr>
+                                        </React.Fragment>
                                     ))}
                                     <tr>
                                         <td id="response-suggestions" colSpan="3"><strong>Response Suggestions:</strong> {report.description || 'N/A'}</td>
@@ -257,6 +248,7 @@ const Reports = () => {
                                         </td>
                                     </tr>
                                 </tbody>
+
                             </table>
 
                             <h2>FIRE LEVEL CALCULATION</h2>

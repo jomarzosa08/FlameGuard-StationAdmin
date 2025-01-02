@@ -29,6 +29,10 @@ const Response = () => {
     const [directions, setDirections] = useState(null);
     const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
 
+    const [modalMessage, setModalMessage] = useState('');
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: "AIzaSyC5eQ8Le4-U65MLi8ZqFXlytEjico-J8lQKEY",
         libraries: ['places'],
@@ -110,12 +114,23 @@ const Response = () => {
                 dutyStatus: "on duty",
             });
 
-            alert(`Notification sent to ${responder.respondents_Name}`);
+            showModal(`Responder Notified!`);
         } catch (error) {
             console.error('Error notifying responder:', error);
-            alert('Failed to notify responder. Please try again.');
+            showModal('Failed to notify responder. Please try again.');
         }
     };
+
+
+    const showModal = (message) => {
+        setModalMessage(message);
+        setIsModalVisible(true);
+
+        setTimeout(() => {
+            setIsModalVisible(false); // Just hide the modal
+        }, 3000); // Modal disappears after 3 seconds
+    };
+
 
     if (!isLoaded) return <p>Loading map...</p>;
     if (!report) return <p>No fire report details provided.</p>;
@@ -186,6 +201,13 @@ const Response = () => {
                     </div>
                 </div>
             </div>
+            {isModalVisible && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <p>{modalMessage}</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
     

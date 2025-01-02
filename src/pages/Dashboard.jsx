@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
+import useEmergencyAlert from "./useEmergencyAlert";
 import * as tf from '@tensorflow/tfjs';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
@@ -23,6 +24,7 @@ const Dashboard = () => {
     const [isAllReportsDescending, setIsAllReportsDescending] = useState(false);
     const navigate = useNavigate();
     const MAPTILER_API_KEY = 'YaB4iP4jFDNdXfQfiNVT'; 
+    useEmergencyAlert();
 
     // Sorting logic
     const sortedAllReports = allReports

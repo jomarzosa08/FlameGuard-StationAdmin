@@ -317,3 +317,6 @@ td[id^="eta"] {
     text-transform: uppercase;
     color: green;
 }
+.station-chief-row {
+    border-bottom: 2px solid lightgray;
+}

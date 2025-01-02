@@ -87,6 +87,12 @@ const Reports = () => {
                         })
                 );
 
+                const etas = assignedData.map((responder) => responder.eta);
+
+                // Save ETAs to the database
+                const reportRef = doc(firestore, 'reportDetails', report.id);
+                await updateDoc(reportRef, { ETAs: etas });
+
                 setResponderNames(
                     assignedData.length ? assignedData : [{ name: 'No responders assigned', stationChief: 'N/A', eta: 'N/A', timeOfArrival: 'N/A' }]
                 );
@@ -98,9 +104,6 @@ const Reports = () => {
             setResponderNames([{ name: 'Error fetching responders', stationChief: 'N/A', eta: 'N/A', timeOfArrival: 'N/A' }]);
         }
     };
-
-
-
 
     const fetchIncidentAddress = async () => {
         try {

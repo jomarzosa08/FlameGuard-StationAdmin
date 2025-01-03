@@ -151,7 +151,7 @@ const Response = () => {
                                         <p><strong>📍 Location:</strong> <span className="detail-text">{report.latitude}, {report.longitude}</span></p>
                                     </div>
                                     <div className="report-detail">
-                                        <p><strong>📝 Description:</strong> <span className="detail-text">{report.description || 'No description available'}</span></p>
+                                        <p><strong>📝 Emergency Response:</strong> <span className="detail-text">{report.description || 'No description available'}</span></p>
                                     </div>
                                 </div>
                                 <br />
@@ -162,7 +162,9 @@ const Response = () => {
                                 <ul className="responder-list-fire">
                                     {responders.slice(0, 3).map((responder) => (
                                         <li key={responder.id} className="responder-item-fire">
-                                            <p><strong>{responder.respondents_Name}</strong> - {responder.distance.toFixed(2)} km away</p>
+                                            <p><strong>{responder.respondents_Name}</strong> </p>
+                                            <br />
+                                            <p><strong>Distance:</strong> {responder.distance.toFixed(2)} km away </p>
                                             <br />
                                             <p> <strong>Address:</strong> {responder.respondents_Address}</p>
                                             <br />

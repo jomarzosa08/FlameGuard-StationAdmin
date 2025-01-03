@@ -124,7 +124,7 @@ const UserProfiles = () => {
                                 <th>Address</th>
                                 <th>Email</th>
                                 <th>Contact</th>
-                                <th>Actions</th>
+                                <th>Station Chief</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -187,20 +187,7 @@ const UserProfiles = () => {
                                                 <td>{responder.respondents_Address}</td>
                                                 <td>{responder.respondents_Email}</td>
                                                 <td>{responder.respondents_Contact}</td>
-                                                <td>
-                                                    <button
-                                                        className="edit-button"
-                                                        onClick={() => handleEdit(responder)}
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        className="delete-button"
-                                                        onClick={() => handleDelete(responder.id)}
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </td>
+                                                <td>{responder.respondents_StationChief}</td>
                                             </>
                                         )}
                                     </tr>
